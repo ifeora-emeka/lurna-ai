@@ -2,6 +2,10 @@ import { auth } from "@/lib/auth"
 import { User } from "@/types/auth.types"
 
 export async function getCurrentUser(): Promise<User | null> {
+  if (process.env.BUILD_TIME === "true") {
+    return null
+  }
+
   try {
     const session = await auth()
     

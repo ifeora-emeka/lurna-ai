@@ -15,8 +15,17 @@ if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
   console.warn("Google OAuth credentials are not defined. Google sign-in will not work.")
 }
 
-const client = MONGODB_URI ? new MongoClient(MONGODB_URI) : null
-const clientPromise = client?.connect()
+let client = null
+let clientPromise = null
+
+if (MONGODB_URI) {
+  try {
+    client = new MongoClient(MONGODB_URI)
+    clientPromise = client.connect()
+  } catch (error) {
+    console.warn("Failed to create MongoDB client:", error)
+  }
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: MONGODB_URI && clientPromise ? MongoDBAdapter(clientPromise) : undefined,
@@ -46,10 +55,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   pages: {
     signIn: "/login",
-  },
-  callbacks: {
+  },  callbacks: {
     async session({ session, user }) {
-      if (session.user) {
+      if (session?.user && user?.id) {
         session.user.id = user.id
       }
       return session
