@@ -12,6 +12,13 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Set build-time environment variables with fallbacks
+ENV MONGODB_URI=""
+ENV NEXTAUTH_URL=""
+ENV NEXTAUTH_SECRET=""
+ENV GOOGLE_CLIENT_ID=""
+ENV GOOGLE_CLIENT_SECRET=""
+
 RUN npm run build
 
 FROM base AS runner

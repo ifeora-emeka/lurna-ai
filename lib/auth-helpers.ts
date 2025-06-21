@@ -16,6 +16,7 @@ export async function getCurrentUser(): Promise<User | null> {
       image: session.user.image,
     }
   } catch (error) {
+    console.warn("Failed to get current user:", error)
     return null
   }
 }
