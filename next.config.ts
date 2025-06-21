@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
       "platform-lookaside.fbsbx.com"
     ],
   },
+  experimental: {
+    serverComponentsExternalPackages: ['mongodb']
+  },
 };
 
 export default nextConfig;

@@ -27,8 +27,20 @@ if (MONGODB_URI) {
   }
 }
 
+const createMongoAdapter = () => {
+  if (MONGODB_URI && clientPromise && client) {
+    try {
+      return MongoDBAdapter(clientPromise)
+    } catch (error) {
+      console.warn("MongoDB adapter error:", error)
+      return undefined
+    }
+  }
+  return undefined
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  adapter: MONGODB_URI && clientPromise ? MongoDBAdapter(clientPromise) : undefined,
+  adapter: createMongoAdapter(),
   providers: [
     ...(GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET ? [
       Google({

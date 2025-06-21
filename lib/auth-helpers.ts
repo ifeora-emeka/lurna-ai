@@ -8,7 +8,7 @@ export async function getCurrentUser(): Promise<User | null> {
 
   try {
     const session = await auth()
-    
+
     if (!session?.user) {
       return null
     }
