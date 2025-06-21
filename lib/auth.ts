@@ -64,10 +64,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         maxAge: 21 * 24 * 60 * 60,
       },
     },
-  },
-  pages: {
+  },  pages: {
     signIn: "/login",
-  },  callbacks: {
+  },
+  trustHost: true,
+  callbacks: {
     async session({ session, user }) {
       if (session?.user && user?.id) {
         session.user.id = user.id
