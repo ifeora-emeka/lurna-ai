@@ -1,0 +1,13 @@
+<svg width="120" height="40" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#60a5fa" />
+      <stop offset="100%" stopColor="#3b82f6" />
+    </linearGradient>
+  </defs>
+  <circle cx="20" cy="20" r="16" fill="white" stroke="url(#logoGradient)" strokeWidth="2" />
+  <path d="M16 16h8v8h-8z" fill="url(#logoGradient)" opacity="0.1" />
+  <circle cx="20" cy="20" r="4" fill="url(#logoGradient)" />
+  <path d="M18 18l2 2 2-2" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  <text x="45" y="26" font-family="Inter, sans-serif" font-size="18" font-weight="600" fill="white">Lurna AI</text>
+</svg>
