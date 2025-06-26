@@ -1,27 +1,30 @@
 "use client"
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAuth } from "@/context/auth-context"
 import { useRouter } from "next/navigation"
-import { AppLayout } from "@/components/layout"
-import {
-    FileText,
-    BarChart3,
-    Clock,
-    TrendingUp,
-    Upload,
-    Plus
-} from "lucide-react"
+import { Plus, Search, Filter, SortAsc } from "lucide-react"
+import { LearningSetCard } from "@/components/common/learning-set-card"
+import { SetLoadingSkeleton } from "@/components/common/set-loading-skeleton"
 
 export default function SpaceHomePage() {
     const { user, isLoading } = useAuth()
     const router = useRouter()
+    const [setsLoading, setSetsLoading] = useState(true)
+    const [searchQuery, setSearchQuery] = useState("")
 
     useEffect(() => {
         if (!isLoading && !user) {
             router.push('/login')
         }
     }, [user, isLoading, router])
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setSetsLoading(false)
+        }, 2000)
+        return () => clearTimeout(timer)
+    }, [])
 
     if (isLoading) {
         return (
@@ -35,70 +38,168 @@ export default function SpaceHomePage() {
         return null
     }
 
-    const stats = [
+    const mockLearningSets = [
         {
-            title: "Total Documents",
-            value: "24",
-            description: "PDFs uploaded this month",
-            icon: FileText,
-            trend: "+12%"
+            id: "cit-435",
+            title: "Advanced Database Systems",
+            description: "Comprehensive study of database design, optimization, and advanced SQL techniques for enterprise applications.",
+            subject: "CIT 435",
+            color: "#3B82F6",
+            documentsCount: 12,
+            questionsCount: 156,
+            studyTime: "24h",
+            lastAccessed: "2 hours ago",
+            progress: 78
         },
         {
-            title: "Quizzes Generated",
-            value: "156",
-            description: "Questions created from documents",
-            icon: BarChart3,
-            trend: "+23%"
+            id: "js-intro",
+            title: "Introduction to JavaScript",
+            description: "Learn the fundamentals of JavaScript programming including ES6 features, DOM manipulation, and async programming.",
+            subject: "WEB 101",
+            color: "#F59E0B",
+            documentsCount: 8,
+            questionsCount: 94,
+            studyTime: "18h",
+            lastAccessed: "1 day ago",
+            progress: 92
         },
         {
-            title: "Study Time",
-            value: "48h",
-            description: "Total time spent learning",
-            icon: Clock,
-            trend: "+8%"
+            id: "react-advanced",
+            title: "Advanced React Patterns",
+            description: "Deep dive into React hooks, context, performance optimization, and modern React development patterns.",
+            subject: "WEB 301",
+            color: "#10B981",
+            documentsCount: 15,
+            questionsCount: 203,
+            studyTime: "32h",
+            lastAccessed: "3 hours ago",
+            progress: 45
         },
         {
-            title: "Average Score",
-            value: "87%",
-            description: "Across all quiz attempts",
-            icon: TrendingUp,
-            trend: "+5%"
+            id: "ai-ml",
+            title: "Machine Learning Fundamentals",
+            description: "Introduction to machine learning algorithms, data preprocessing, and model evaluation techniques.",
+            subject: "CS 480",
+            color: "#8B5CF6",
+            documentsCount: 20,
+            questionsCount: 278,
+            studyTime: "41h",
+            lastAccessed: "5 hours ago",
+            progress: 63
+        },
+        {
+            id: "cybersec",
+            title: "Cybersecurity Essentials",
+            description: "Core concepts of information security, threat analysis, and security implementation strategies.",
+            subject: "CIT 380",
+            color: "#EF4444",
+            documentsCount: 18,
+            questionsCount: 189,
+            studyTime: "28h",
+            lastAccessed: "1 day ago",
+            progress: 34
+        },
+        {
+            id: "data-struct",
+            title: "Data Structures & Algorithms",
+            description: "Comprehensive coverage of fundamental data structures and algorithmic problem-solving techniques.",
+            subject: "CS 260",
+            color: "#06B6D4",
+            documentsCount: 14,
+            questionsCount: 167,
+            studyTime: "35h",
+            lastAccessed: "2 days ago",
+            progress: 87
         }
     ]
 
-    const recentDocuments = [
-        { name: "Introduction to Machine Learning", date: "2 hours ago", questions: 24 },
-        { name: "Data Structures and Algorithms", date: "1 day ago", questions: 31 },
-        { name: "Web Development Fundamentals", date: "2 days ago", questions: 18 },
-        { name: "Database Management Systems", date: "3 days ago", questions: 22 }
-    ]
+    const filteredSets = mockLearningSets.filter(set =>
+        set.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        set.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        set.description.toLowerCase().includes(searchQuery.toLowerCase())
+    )
 
     return (
-        <>
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h2 className="text-3xl font-bold tracking-tight">Welcome back, {user.name}!</h2>
-                        <p className="text-muted-foreground">
-                            Here's what's happening with your learning today.
-                        </p>
-                    </div>
-
-                    <div className="flex gap-3">
-                        <button className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
-                            <Upload size={16} />
-                            Upload PDF
-                        </button>
-                        <button className="inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-colors">
-                            <Plus size={16} />
-                            New Quiz
-                        </button>
+        <div className="max-w-7xl mx-auto space-y-8">
+            <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 rounded-3xl blur-3xl -z-10" />
+                <div className="relative bg-background/80 backdrop-blur-sm border border-border/50 rounded-2xl p-8 lg:p-12 shadow-lg">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+                        <div className="flex-1">
+                            <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                                Learning Sets
+                            </h1>
+                            <p className="text-muted-foreground mt-4 text-lg lg:text-xl max-w-3xl leading-relaxed">
+                                Continue your learning journey with your personalized study sets. Track progress, manage documents, and master your subjects.
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-4 shrink-0">
+                            <button className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 font-semibold text-lg">
+                                <Plus size={20} />
+                                Create Set
+                            </button>
+                        </div>
                     </div>
                 </div>
-
-                
-
             </div>
-        </>
+
+            <div className="flex flex-col lg:flex-row gap-6">
+                <div className="relative flex-1 max-w-2xl">
+                    <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
+                    <input
+                        type="text"
+                        placeholder="Search learning sets..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-14 pr-6 py-4 border border-input rounded-xl bg-background/50 backdrop-blur-sm text-base placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:bg-background transition-all duration-200 shadow-sm"
+                    />
+                </div>
+                <div className="flex items-center gap-4">
+                    <button className="inline-flex items-center gap-2 px-6 py-4 border border-input rounded-xl hover:bg-accent hover:text-accent-foreground transition-all duration-200 bg-background/50 backdrop-blur-sm shadow-sm font-medium">
+                        <Filter size={16} />
+                        Filter
+                    </button>
+                    <button className="inline-flex items-center gap-2 px-6 py-4 border border-input rounded-xl hover:bg-accent hover:text-accent-foreground transition-all duration-200 bg-background/50 backdrop-blur-sm shadow-sm font-medium">
+                        <SortAsc size={16} />
+                        Sort
+                    </button>
+                </div>
+            </div>
+
+            {setsLoading ? (
+                <SetLoadingSkeleton />
+            ) : (
+                <>
+                    {filteredSets.length === 0 ? (
+                        <div className="text-center py-16">
+                            <div className="bg-muted/30 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
+                                <Search size={32} className="text-muted-foreground" />
+                            </div>
+                            <h3 className="text-xl font-semibold mb-2">
+                                {searchQuery ? "No sets found" : "No learning sets yet"}
+                            </h3>
+                            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                                {searchQuery 
+                                    ? "Try adjusting your search terms or create a new set." 
+                                    : "Create your first learning set to start organizing your study materials."
+                                }
+                            </p>
+                            {!searchQuery && (
+                                <button className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 font-medium">
+                                    <Plus size={18} />
+                                    Create your first set
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8 lg:gap-12">
+                            {filteredSets.map((set) => (
+                                <LearningSetCard key={set.id} set={set} />
+                            ))}
+                        </div>
+                    )}
+                </>
+            )}
+        </div>
     )
 }

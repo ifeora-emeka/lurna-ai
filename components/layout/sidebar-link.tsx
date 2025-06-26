@@ -36,30 +36,36 @@ export function SidebarLink({
       href={href}
       onClick={handleClick}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group relative",
+        "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative overflow-hidden",
         isActive
-          ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-sm"
-          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
-        isCollapsed && "justify-center px-2"
+          ? "bg-gradient-to-r from-primary/20 to-primary/10 text-primary shadow-lg border border-primary/20 backdrop-blur-sm"
+          : "text-sidebar-foreground hover:bg-gradient-to-r hover:from-sidebar-accent/80 hover:to-sidebar-accent/60 hover:text-sidebar-accent-foreground hover:shadow-md border border-transparent hover:border-sidebar-border/30",
+        isCollapsed && "justify-center px-3 py-3"
       )}
     >
+      {isActive && (
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent" />
+      )}
+      
       <Icon 
-        size={20} 
+        size={18} 
         className={cn(
-          "shrink-0 transition-colors",
-          isActive ? "text-sidebar-primary" : "group-hover:text-sidebar-primary"
+          "shrink-0 transition-all duration-200 relative z-10",
+          isActive 
+            ? "text-primary drop-shadow-sm" 
+            : "group-hover:text-sidebar-accent-foreground group-hover:scale-110"
         )} 
       />
       
       {!isCollapsed && (
         <>
-          <span className="truncate">{label}</span>
+          <span className="truncate relative z-10 font-medium">{label}</span>
           {badge && (
             <span className={cn(
-              "ml-auto px-2 py-0.5 text-xs rounded-full font-medium",
+              "ml-auto px-2.5 py-1 text-xs rounded-full font-semibold relative z-10 shadow-sm",
               isActive 
-                ? "bg-sidebar-primary text-sidebar-primary-foreground" 
-                : "bg-sidebar-accent text-sidebar-accent-foreground"
+                ? "bg-primary text-white" 
+                : "bg-sidebar-accent/80 text-sidebar-accent-foreground"
             )}>
               {badge}
             </span>
@@ -68,9 +74,9 @@ export function SidebarLink({
       )}
 
       {isCollapsed && (
-        <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+        <div className="absolute left-full ml-3 px-3 py-2 bg-popover text-popover-foreground text-sm rounded-xl shadow-xl border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 backdrop-blur-sm">
           {label}
-          {badge && <span className="ml-2 text-muted-foreground">({badge})</span>}
+          {badge && <span className="ml-2 px-1.5 py-0.5 bg-muted text-muted-foreground text-xs rounded-md font-medium">({badge})</span>}
         </div>
       )}
     </Link>

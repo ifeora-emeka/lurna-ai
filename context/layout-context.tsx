@@ -8,6 +8,8 @@ interface LayoutContextType {
   closeSidebar: () => void
   openSidebar: () => void
   isMobile: boolean
+  isCollapsed: boolean
+  toggleCollapse: () => void
 }
 
 const LayoutContext = createContext<LayoutContextType | undefined>(undefined)
@@ -15,6 +17,7 @@ const LayoutContext = createContext<LayoutContextType | undefined>(undefined)
 export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   useEffect(() => {
     const checkMobile = () => {
@@ -24,6 +27,7 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
         setIsSidebarOpen(true)
       } else {
         setIsSidebarOpen(false)
+        setIsCollapsed(false)
       }
     }
 
@@ -35,6 +39,11 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
   const closeSidebar = () => setIsSidebarOpen(false)
   const openSidebar = () => setIsSidebarOpen(true)
+  const toggleCollapse = () => {
+    if (!isMobile) {
+      setIsCollapsed(!isCollapsed)
+    }
+  }
 
   return (
     <LayoutContext.Provider 
@@ -43,7 +52,9 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
         toggleSidebar, 
         closeSidebar, 
         openSidebar, 
-        isMobile 
+        isMobile,
+        isCollapsed,
+        toggleCollapse
       }}
     >
       {children}

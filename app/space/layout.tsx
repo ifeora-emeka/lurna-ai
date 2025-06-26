@@ -1,13 +1,11 @@
 import React from 'react'
-import { LayoutProvider } from "@/context/layout-context"
 import { AppLayout } from '@/components/layout'
+import { NavContentRenderer } from '@/components/nav-content'
 
 export default function layout({children}: {children: React.ReactNode}) {
   return (
-    <LayoutProvider>
-      <AppLayout>
+      <AppLayout navContent={<NavContentRenderer />}>
         {children}
       </AppLayout>
-    </LayoutProvider>
   )
 }

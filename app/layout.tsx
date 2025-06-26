@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react";
 import { AuthProvider } from "@/context/auth-context";
 import { APP_CONFIG } from "@/config/app.config";
 import { getCurrentUser } from "@/lib/auth-helpers";
+import { LayoutProvider } from "@/context/layout-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const currentUser = await getCurrentUser()
-  
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -42,7 +43,9 @@ export default async function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              {children}
+              <LayoutProvider>
+                {children}
+              </LayoutProvider>
             </ThemeProvider>
           </AuthProvider>
         </SessionProvider>

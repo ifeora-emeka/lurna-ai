@@ -11,22 +11,23 @@ interface AppLayoutProps {
   children: ReactNode
   title?: string
   showSearch?: boolean
+  navContent?: ReactNode
 }
 
-export function AppLayout({ children, title, showSearch = true }: AppLayoutProps) {
-  const { toggleSidebar, isSidebarOpen, isMobile } = useLayout()
+export function AppLayout({ children, title, showSearch = true, navContent }: AppLayoutProps) {
+  const { toggleSidebar, isSidebarOpen, isMobile, isCollapsed } = useLayout()
   const { user } = useAuth()
 
   return (
     <div className="min-h-screen bg-background-">
-      <Sidebar />
+      <Sidebar navContent={navContent} />
       
       <div className={cn(
         "transition-all duration-300 ease-in-out",
         isMobile 
           ? "ml-0" 
           : isSidebarOpen 
-            ? "ml-72" 
+            ? isCollapsed ? "ml-16" : "ml-72"
             : "ml-16"
       )}>
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
