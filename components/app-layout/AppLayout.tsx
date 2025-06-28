@@ -21,11 +21,11 @@ export default function AppLayout({ children, leftNavContent, rightNavContent }:
             <div className='flex justify-center'>
                 <div className='w-full 2xl:w-[1400px] flex relative'>
                     <aside className={`
-                        fixed md:sticky top-0 z-40 h-screen bg-background border-r transition-transform duration-300 ease-in-out
+                        fixed md:sticky top-0 h-screen transition-transform duration-300 ease-in-out z-50
                         w-[280px] md:w-[280px]
                         ${isNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
                     `}>
-                        <div className='border-b z-50 h-16 sticky top-0 flex justify-between items-center px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
+                        <div className='z-50 h-16 sticky top-0 flex justify-between items-center px-4 backdrop-blur'>
                             <div className='flex items-center gap-2'>
                                 <Image 
                                     src="/logo.svg" 
@@ -35,12 +35,6 @@ export default function AppLayout({ children, leftNavContent, rightNavContent }:
                                     className='h-8 w-auto'
                                 />
                             </div>
-                        </div>
-                        <div className='flex items-center justify-between p-4 md:hidden border-b'>
-                            <h2 className='font-semibold'>Navigation</h2>
-                            <Button size="icon" variant="ghost" onClick={closeNav}>
-                                <X className='h-4 w-4' />
-                            </Button>
                         </div>
                         <div className='p-4 pt-6 md:pt-6'>
                             {leftNavContent ? leftNavContent : <DefaultNav />}
@@ -59,8 +53,8 @@ export default function AppLayout({ children, leftNavContent, rightNavContent }:
                     </div>
 
                     {rightNavContent && (
-                        <aside className='hidden lg:block w-[320px] bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-l h-screen sticky top-0'>
-                            <div className='border-b z-50 h-16 sticky top-0 flex justify-between items-center px-4'>
+                        <aside className='hidden lg:block w-[320px] backdrop-blur h-screen sticky top-0'>
+                            <div className='z-50 h-16 sticky top-0 flex justify-between items-center px-4'>
                                 <div className='flex items-center gap-3'>
                                     <Avatar className='h-8 w-8'>
                                         <AvatarImage src="" />

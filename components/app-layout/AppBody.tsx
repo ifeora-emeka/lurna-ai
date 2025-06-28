@@ -8,14 +8,15 @@ type Props = {
     children?: React.ReactNode;
     heading?: string;
     subHeading?: string;
+    headerRightContent?: React.ReactNode;
 }
 
-export default function AppBody({ children, heading, subHeading }: Props) {
+export default function AppBody({ children, heading, subHeading, headerRightContent }: Props) {
     const { toggleNav } = useLayout()
 
     return (
-        <main className='flex-1 h-screen flex flex-col bg-gradient-to-br from-background via-background to-accent/10'>
-            <header className='border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50 h-16 sticky top-0 flex justify-between items-center px-4 md:px-6'>
+        <main className='flex-1 h-screen flex flex-col to-accent/10'>
+            <header className='border-b backdrop-blur z-40 h-16 sticky top-0 flex justify-between items-center px-4 md:px-6'>
                 <div className='flex items-center gap-3'>
                     <Button 
                         size='icon' 
@@ -34,6 +35,11 @@ export default function AppBody({ children, heading, subHeading }: Props) {
                         )}
                     </div>
                 </div>
+                {headerRightContent && (
+                    <div className='flex items-center gap-2'>
+                        {headerRightContent}
+                    </div>
+                )}
             </header>
             <div className='flex-1 overflow-auto'>
                 <div className='p-4 md:p-6 space-y-6 max-w-7xl mx-auto'>
