@@ -1,11 +1,13 @@
 import React from 'react'
-import { AppLayout } from '@/components/layout'
-import { NavContentRenderer } from '@/components/nav-content'
 
-export default function layout({children}: {children: React.ReactNode}) {
+type Props = {
+    children?: React.ReactNode
+}
+
+export default function layout({ children }: Props) {
   return (
-      <AppLayout navContent={<NavContentRenderer />}>
-        {children}
-      </AppLayout>
+    <div>
+      {children}
+    </div>
   )
 }
