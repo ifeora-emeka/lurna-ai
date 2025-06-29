@@ -1,8 +1,10 @@
+'use client'
 import React from 'react'
 import AppBody from '@/components/app-layout/AppBody'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, BookOpen, Users, Clock, Star } from 'lucide-react'
+import { Plus, BookOpen, Users, Clock, Star, UserRoundPen, Eye } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 const learningSets = [
     {
@@ -83,18 +85,18 @@ const getDifficultyColor = (difficulty: string) => {
 }
 
 export default function SpaceDetailsPage() {
-    const createSetButton = (
-        <Button>
-            <Plus className='h-4 w-4' />
-            Create Set
-        </Button>
-    )
+    const router = useRouter();
 
     return (
         <AppBody
             heading='Your Sets'
             subHeading='Manage your sets, invite members, and customize settings.'
-            headerRightContent={createSetButton}
+            headerRightContent={<>
+                <Button onClick={() => router.push('/space/create')}>
+                    <Plus className='h-4 w-4' />
+                    Create Set
+                </Button>
+            </>}
         >
             <div className='grid grid-cols-1 lg:grid-cols-2 gap-3'>
                 {learningSets.map((set) => (
@@ -127,20 +129,24 @@ export default function SpaceDetailsPage() {
                                         <span>{set.cardCount} cards</span>
                                     </div>
                                     <div className='flex items-center gap-1'>
+                                        <UserRoundPen className='h-4 w-4' />
+                                        <span>{set.members} assessments</span>
+                                    </div>
+                                    <div className='flex items-center gap-1'>
                                         <Users className='h-4 w-4' />
                                         <span>{set.members} members</span>
                                     </div>
                                 </div>
                                 <div className='flex items-center gap-1'>
-                                    <Clock className='h-4 w-4' />
-                                    <span>{set.lastStudied}</span>
+                                    <Star className='h-4 w-4 text-yellow-500' />
+                                    <span>4.7</span>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
                 ))}
             </div>
-            
+
             <div className='flex justify-center pt-8'>
                 <Button variant='outline' size='lg' className='gap-2'>
                     <Plus className='h-4 w-4' />
