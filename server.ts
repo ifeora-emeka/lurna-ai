@@ -15,6 +15,23 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
+app.use((req, res, next) => {
+  console.log(`[DEBUG] Incoming ${req.method} request to ${req.path}`);
+  console.log('[DEBUG] Request headers:', req.headers);
+  console.log('[DEBUG] Request body:', req.body);
+  next();
+});
+
+app.use((req, res, next) => {
+  const originalSend = res.send;
+  res.send = function(data) {
+    console.log(`[DEBUG] Sending response for ${req.method} ${req.path}`);
+    console.log('[DEBUG] Response data:', data);
+    return originalSend.call(this, data);
+  };
+  next();
+});
+
 console.log('Registering routes...');
 app.use('/api/sets', setsRouter);
 app.use('/api/auth', authRouter);

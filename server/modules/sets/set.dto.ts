@@ -8,3 +8,7 @@ export const generateModuleSchema = z.object({
         }).strict()
     )
 }).strict();
+
+export const createSetRequestSchema = z.object({
+    prompt: z.string().min(10).max(1000),
+}).strict();

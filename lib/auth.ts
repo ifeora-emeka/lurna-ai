@@ -1,6 +1,6 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { UserSession } from "@/app/api/auth/[...nextauth]/route";
+import { UserSession } from "@/types/auth.types";
 import { redirect } from "next/navigation";
 
 export async function getServerSideSession() {

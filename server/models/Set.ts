@@ -1,11 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database';
-
-interface SetAttributes {
-  id?: number;
-  name: string;
-  description: string;
-}
+import { SetAttributes } from '../../types/set.types';
 
 export class Set extends Model<SetAttributes> implements SetAttributes {
   public id!: number;

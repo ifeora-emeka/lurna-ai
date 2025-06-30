@@ -1,20 +1,9 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { JWT } from "next-auth/jwt";
-import { Session, User } from "next-auth";
+import { ExtendedUser, UserSession } from "@/types/auth.types";
 
-export interface ExtendedUser extends User {
-    emailVerified?: Date | null;
-}
-
-export interface UserSession extends Session {
-    user?: {
-        id?: string;
-        name?: string | null;
-        email?: string | null;
-        image?: string | null;
-    };
-}
+export type { ExtendedUser, UserSession };
 
 export const authOptions: NextAuthOptions = {
     providers: [
