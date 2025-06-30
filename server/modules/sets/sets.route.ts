@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { createSet } from './sets.controller';
+import SetsController from './sets.controller';
 
 const router = Router();
+const { createSet } = SetsController;
 
 router.get('/create', createSet);
 

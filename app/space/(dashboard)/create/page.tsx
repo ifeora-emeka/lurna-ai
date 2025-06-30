@@ -86,20 +86,20 @@ export default function CreateSetPage() {
                 heading='Create Learning Set'
                 subHeading='Choose how you want to create your personalized learning content'
             >
-                <div className="container md:max-w-5xl md:mx-auto py-8 md:px-4">
+                <div className="container md:max-w-5xl md:mx-auto pb-8 md:px-4">
                     <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-3xl" />
+                        {/* <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-3xl" /> */}
                         
-                        <Card className="relative border-0 shadow-2xl bg-white/80 backdrop-blur-sm overflow-hidden">
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
+                        <div>
+                            {/* <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50" /> */}
                             
                             {createMethod === 'init' && (
                                 <>
-                                    <CardHeader className="text-center py-12 bg-gradient-to-b from-primary/5 to-transparent">
+                                    <CardHeader className="text-center py-12 ">
                                         <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                                             <BookOpen className="h-8 w-8 text-primary" />
                                         </div>
-                                        <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                                        <CardTitle className="text-3xl font-bold">
                                             How would you like to create your learning set?
                                         </CardTitle>
                                         <CardDescription className="text-lg mt-4 max-w-2xl mx-auto text-muted-foreground">
@@ -138,15 +138,15 @@ export default function CreateSetPage() {
 
                                             <div
                                                 onClick={() => setCreateMethod('documents')}
-                                                className="group relative overflow-hidden rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-8 cursor-pointer transition-all duration-300 hover:border-primary/40 hover:shadow-xl hover:scale-[1.02] hover:bg-gradient-to-br hover:from-primary/10 hover:to-primary/20"
+                                                className="group relative overflow-hidden rounded-2xl border-2 border-secondary/20 bg-gradient-to-br from-secondary/5 to-secondary/10 p-8 cursor-pointer transition-all duration-300 hover:border-secondary/40 hover:shadow-xl hover:scale-[1.02] hover:bg-gradient-to-br hover:from-secondary/10 hover:to-secondary/20"
                                             >
                                                 <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                                                    <div className="w-6 h-6 bg-secondary rounded-full flex items-center justify-center">
                                                         <div className="w-2 h-2 bg-white rounded-full" />
                                                     </div>
                                                 </div>
                                                 <div className="text-center space-y-6">
-                                                    <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                                                    <div className="mx-auto w-20 h-20 bg-gradient-to-br from-secondary to-secondary/80 rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                                                         <CloudUpload className="h-10 w-10 text-white" />
                                                     </div>
                                                     <div className="space-y-3">
@@ -155,10 +155,10 @@ export default function CreateSetPage() {
                                                             Upload your own documents and we'll convert them into an interactive learning set
                                                         </p>
                                                     </div>
-                                                    <div className="inline-flex items-center text-sm text-primary font-medium">
+                                                    <div className="inline-flex items-center text-sm text-secondary font-medium">
                                                         <span>Upload Files</span>
-                                                        <div className="ml-2 w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
-                                                            <div className="w-1 h-1 bg-primary rounded-full" />
+                                                        <div className="ml-2 w-4 h-4 rounded-full border-2 border-secondary flex items-center justify-center">
+                                                            <div className="w-1 h-1 bg-secondary rounded-full" />
                                                         </div>
                                                     </div>
                                                 </div>
@@ -170,7 +170,7 @@ export default function CreateSetPage() {
 
                         {createMethod === 'prompt' && (
                             <>
-                                <CardHeader className="py-8 bg-gradient-to-b from-primary/5 to-transparent">
+                                <CardHeader className="py-8 bg-gradient-to-b  to-transparent">
                                     <div className="flex items-center gap-4 mb-4">
                                         <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                                             <BookOpen className="h-6 w-6 text-primary" />
@@ -223,7 +223,7 @@ export default function CreateSetPage() {
 
                         {createMethod === 'documents' && (
                             <>
-                                <CardHeader className="py-8 bg-gradient-to-b from-primary/5 to-transparent">
+                                <CardHeader className="py-8">
                                     <div className="flex items-center gap-4 mb-4">
                                         <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
                                             <CloudUpload className="h-6 w-6 text-primary" />
@@ -240,10 +240,10 @@ export default function CreateSetPage() {
                                     <div className="space-y-8">
                                         <div
                                             className={cn(
-                                                "relative border-2 border-dashed rounded-2xl p-16 text-center cursor-pointer transition-all duration-300 group",
+                                                "relative border-2 border-dashed rounded-2xl p-16 text-center cursor-pointer transition-all duration-300 group hover:bg-secondary70 hover:border-secondary/70",
                                                 files.length > 0 
-                                                    ? "border-primary/50 bg-primary/5" 
-                                                    : "border-gray-300 hover:border-primary/50 hover:bg-primary/5"
+                                                    ? "border-secondary/70 bg-secondary/5" 
+                                                    : "border-secondary/70 bg-secondary/5"
                                             )}
                                             onClick={triggerFileInput}
                                         >
@@ -256,8 +256,8 @@ export default function CreateSetPage() {
                                                 className="hidden"
                                             />
                                             <div className="space-y-4">
-                                                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                                    <Upload className="h-10 w-10 text-primary" />
+                                                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                                    <Upload className="h-10 w-10 text-secondary" />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <h3 className="text-xl font-semibold text-gray-900">
@@ -267,10 +267,10 @@ export default function CreateSetPage() {
                                                         Support for PDF, DOCX, and TXT files (up to 50MB each)
                                                     </p>
                                                 </div>
-                                                <div className="flex items-center justify-center gap-2 text-sm text-primary font-medium">
+                                                <div className="flex items-center justify-center gap-2 text-sm text-secondary font-medium">
                                                     <span>Choose Files</span>
-                                                    <div className="w-4 h-4 rounded-full border-2 border-primary flex items-center justify-center">
-                                                        <div className="w-1 h-1 bg-primary rounded-full" />
+                                                    <div className="w-4 h-4 rounded-full border-2 border-secondary flex items-center justify-center">
+                                                        <div className="w-1 h-1 bg-secondary rounded-full" />
                                                     </div>
                                                 </div>
                                             </div>
@@ -388,7 +388,7 @@ export default function CreateSetPage() {
                                 </div>
                             </CardContent>
                         )}
-                    </Card>
+                    </div>
                 </div>
             </div>
         </AppBody>

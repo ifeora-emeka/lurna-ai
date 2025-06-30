@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
-import { createHardcodedSet } from './sets.service';
 
-export const createSet = async (req: Request, res: Response) => {
-  try {
-    const set = await createHardcodedSet();
-    res.status(201).json(set);
-  } catch (error) {
-    console.error('Error creating set:', error);
-    res.status(500).json({ message: 'Failed to create set', error });
+export default class SetsController {
+  static async createSet(req: Request, res: Response) {
+    try {
+      res.status(200).json({
+        message: 'Hardcoded set created successfully',
+      });
+    } catch (error) {
+      console.error('Error creating hardcoded set:', error);
+      return res.status(500).json({ error: 'Failed to create hardcoded set' });
+    }
   }
-};
+}
