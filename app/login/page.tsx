@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
-export default function LoginPage() {
+// Login form component that uses useSearchParams
+function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/space';
@@ -121,5 +122,18 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+// Main page component with Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
