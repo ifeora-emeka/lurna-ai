@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     Card,
     CardContent,
@@ -24,29 +25,23 @@ import { cn } from '@/lib/utils';
 import AppBody from '@/components/app-layout/AppBody';
 import SetWithPrompt from './SetWithPrompt';
 import SetWithDocument from './SetWithDocument';
-import { CreateSetResponse } from '@/types/set.types';
+import { CreateSetResponse, SetAttributes } from '@/types/set.types';
 
 type CreateMethod = 'init' | 'prompt' | 'documents' | 'loading' | 'success';
 
 export default function CreateSetPage() {
+    const router = useRouter();
     const [createMethod, setCreateMethod] = useState<CreateMethod>('init');
-
-    const handleSubmit = () => {
-        setCreateMethod('loading');
-
-        // Mock loading delay of 3 seconds
-        setTimeout(() => {
-            setCreateMethod('success');
-        }, 3000);
-    };
+    const [createdSet, setCreatedSet] = useState<SetAttributes | null>(null);
 
     const handleCreateWithPrompt = (data: CreateSetResponse) => {
+        setCreatedSet(data.data);
         setCreateMethod('success');
     };
 
     const resetForm = () => {
         setCreateMethod('init');
-        // setFiles([]);
+        setCreatedSet(null);
     };
 
 
@@ -203,7 +198,8 @@ export default function CreateSetPage() {
                                             Create Another
                                         </Button>
                                         <Button
-                                        // className="px-8 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 shadow-lg hover:shadow-xl transition-all duration-200"
+                                            onClick={() => createdSet?.slug && router.push(`/space/set/${createdSet.slug}`)}
+                                            className="px-8 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 shadow-lg hover:shadow-xl transition-all duration-200"
                                         >
                                             View Learning Set
                                         </Button>

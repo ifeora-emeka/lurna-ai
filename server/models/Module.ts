@@ -1,20 +1,23 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database';
-import { SetAttributes } from '../../types/set.types';
-// Removed import
+import { ModuleAttributes, ModuleCreationAttributes } from '../../types/module.types';
+// Imports removed to solve circular dependency
 
-export class Set extends Model<SetAttributes> implements SetAttributes {
+export class Module extends Model<ModuleAttributes, ModuleCreationAttributes> implements ModuleAttributes {
   declare id: number;
   declare name: string;
   declare slug: string;
   declare description: string;
-  declare keywords: string[];
-  declare originalPrompt: string;
-  declare iconClass: string;
+  declare set: any;
   declare createdBy: string;
+  declare tags: string[];
+  declare index: number;
+
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 }
 
-Set.init(
+Module.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -34,29 +37,29 @@ Set.init(
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    keywords: {
-      type: DataTypes.JSON,
-      allowNull: false,
-      defaultValue: [],
-    },
-    originalPrompt: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    iconClass: {
-      type: DataTypes.STRING,
+    set: {
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     createdBy: {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    tags: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: [],
+    },
+    index: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
   {
     sequelize,
-    tableName: 'sets',
+    tableName: 'modules',
     timestamps: true,
   }
 );
 
-export default Set;
+export default Module;

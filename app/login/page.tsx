@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 
-// Login form component that uses useSearchParams
 function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
@@ -20,16 +19,13 @@ function LoginForm() {
       console.log('[DEBUG] Starting Google login process');
       console.log('[DEBUG] Original callbackUrl:', callbackUrl);
       
-      // Make sure to use an absolute URL for the callback with proper encoding
       let absoluteCallback;
       try {
-        // If it's already an absolute URL, use it
         if (callbackUrl.startsWith('http')) {
           absoluteCallback = callbackUrl;
         } else {
-          // Otherwise, construct a proper absolute URL
           const baseUrl = window.location.origin;
-          // Ensure the path is properly joined without double slashes
+          
           const path = callbackUrl.startsWith('/') ? callbackUrl : `/${callbackUrl}`;
           absoluteCallback = `${baseUrl}${path}`;
         }
@@ -37,7 +33,7 @@ function LoginForm() {
         console.log('[DEBUG] Constructed absoluteCallback:', absoluteCallback);
       } catch (urlError) {
         console.error('[DEBUG] Error constructing callback URL:', urlError);
-        // Fallback to a simple path if there's any error
+        
         absoluteCallback = '/space';
         console.log('[DEBUG] Using fallback callback URL:', absoluteCallback);
       }
@@ -52,7 +48,6 @@ function LoginForm() {
 
   return (
     <div className="flex min-h-screen w-full">
-      {/* Left Column - Image/Brand Column */}
       <div className="hidden w-1/2 bg-primary lg:flex flex-col items-center justify-center p-12 relative">
         <div className="absolute top-8 left-8">
           <Image src="/logo.svg" alt="Lurna AI Logo" width={120} height={40} />
@@ -73,7 +68,7 @@ function LoginForm() {
         </div>
       </div>
 
-      {/* Right Column - Login Form */}
+     
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
         <Card className="w-full max-w-md shadow-lg border-0">
           <CardHeader className="space-y-2 text-center">
@@ -125,7 +120,6 @@ function LoginForm() {
   );
 }
 
-// Main page component with Suspense
 export default function LoginPage() {
   return (
     <Suspense fallback={

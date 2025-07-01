@@ -3,6 +3,36 @@ import SetsService from './sets.service';
 import { AuthenticatedRequest } from '../../middlewares/auth.middleware';
 
 export const setsController = {
+  async getSetBySlug(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const { slug } = req.params;
+      
+      if (!slug) {
+        res.status(400).json({ error: 'Set slug is required' });
+        return;
+      }
+
+      const setData = await SetsService.getSetBySlug(slug);
+      
+      res.status(200).json({
+        message: 'Set retrieved successfully',
+        data: setData
+      });
+    } catch (error: any) {
+      console.error('[DEBUG] Error in getSetBySlug controller:', error);
+      
+      if (error.message === 'Set not found') {
+        res.status(404).json({ error: 'Set not found' });
+        return;
+      }
+      
+      res.status(500).json({ 
+        error: 'Failed to retrieve set',
+        details: error.message || 'Unknown error' 
+      });
+    }
+  },
+
   async createSetFromPrompt(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       console.log('[DEBUG] createSetFromPrompt called with prompt:', req.body.prompt);

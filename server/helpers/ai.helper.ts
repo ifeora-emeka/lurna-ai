@@ -43,9 +43,14 @@ export class AI {
     static async generateStructuredData({ prompt, zodSchema }: { prompt: string, zodSchema: any }) {
         this.validateApiKey();
         const model = this.getModel();
+        
+        // Determine if we're expecting an array or object based on the schema
+        const isArraySchema = zodSchema.element ? true : false;
+        
         const jsonPrompt = `${prompt}
-CRITICAL: You must respond with ONLY a valid JSON object. No explanations, no markdown, no code blocks, just pure JSON.
-The response MUST start with { and end with } and be fully valid JSON parseable by JSON.parse().
+CRITICAL: You must respond with ONLY valid JSON. No explanations, no markdown, no code blocks, just pure JSON.
+The response MUST be fully valid JSON parseable by JSON.parse().
+${isArraySchema ? 'The response should be a JSON array starting with [ and ending with ].' : 'The response should be a JSON object starting with { and ending with }.'}
 
 Respond with valid JSON only:`;
         const message = new HumanMessage(jsonPrompt);
@@ -58,15 +63,21 @@ Respond with valid JSON only:`;
         let data;
         
         try {
-            // Try to extract JSON if it's wrapped in markdown code blocks or other text
-            const jsonRegex = /{[\s\S]*}/;
+            // Try to extract JSON based on expected format (array or object)
+            let jsonRegex;
+            if (isArraySchema) {
+                jsonRegex = /\[[\s\S]*\]/;
+            } else {
+                jsonRegex = /{[\s\S]*}/;
+            }
+            
             const match = rawContent.match(jsonRegex);
             
             if (match) {
                 console.log('[DEBUG] Extracted JSON from response:', match[0]);
                 data = JSON.parse(match[0]);
             } else {
-                // If no JSON object found, try the raw response
+                // If no specific format found, try parsing the raw content
                 data = JSON.parse(rawContent);
             }
         } catch (e) {
@@ -81,7 +92,13 @@ Respond with valid JSON only:`;
             return parsed;
         } catch (zodError) {
             console.error('[DEBUG] Zod validation error:', zodError);
-            throw new Error('AI response did not match expected schema');
+            console.error('[DEBUG] Data that failed validation:', JSON.stringify(data, null, 2));
+            // Try to provide more helpful error messages
+            let errorMessage = 'AI response did not match expected schema';
+            if (zodError instanceof z.ZodError) {
+                errorMessage += ': ' + zodError.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
+            }
+            throw new Error(errorMessage);
         }
     }
 }
