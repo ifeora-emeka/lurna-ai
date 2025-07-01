@@ -20,8 +20,14 @@ const createApiInstance = (): AxiosInstance => {
       console.log('[DEBUG] Session data:', session);
       
       if (session?.user?.id) {
-        config.headers['x-user-id'] = session.user.id;
-        console.log('[DEBUG] Added x-user-id header:', session.user.id);
+        // Set Authorization header with Bearer token instead of x-user-id
+        const token = (session as any).accessToken;
+        if (token) {
+          config.headers['Authorization'] = `Bearer ${token}`;
+          console.log('[DEBUG] Added Authorization Bearer token header');
+        } else {
+          console.log('[DEBUG] No access token found in session');
+        }
       } else {
         console.log('[DEBUG] No session or user ID found');
       }

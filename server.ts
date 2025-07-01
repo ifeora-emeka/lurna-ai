@@ -15,12 +15,12 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 
-app.use((req, res, next) => {
-  console.log(`[DEBUG] Incoming ${req.method} request to ${req.path}`);
-  console.log('[DEBUG] Request headers:', req.headers);
-  console.log('[DEBUG] Request body:', req.body);
-  next();
-});
+// app.use((req, res, next) => {
+//   console.log(`[DEBUG] Incoming ${req.method} request to ${req.path}`);
+//   console.log('[DEBUG] Request headers:', req.headers);
+//   console.log('[DEBUG] Request body:', req.body);
+//   next();
+// });
 
 app.use((req, res, next) => {
   const originalSend = res.send;
@@ -41,14 +41,13 @@ app.get('/', (req, res) => {
   res.json({ message: 'Server is running' });
 });
 
-// Test route to ensure API is accessible
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working' });
 });
 
 const initDB = async () => {
   try {
-    await sequelize.sync();
+    await sequelize.sync({ force: true });
     console.log('Database synchronized successfully');
   } catch (error) {
     console.error('Failed to sync database:', error);

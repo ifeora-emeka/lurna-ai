@@ -24,9 +24,11 @@ export async function getUserFromAPI() {
     }
     
     try {
+        const token = (session as any).accessToken;
+        
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/user`, {
             headers: {
-                'x-user-id': session.user.id
+                'Authorization': `Bearer ${token}`
             }
         });
         

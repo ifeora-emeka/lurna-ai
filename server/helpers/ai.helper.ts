@@ -1,178 +1,87 @@
-
 import axios from 'axios';
 import dotenv from 'dotenv';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { HumanMessage } from '@langchain/core/messages';
+import z from 'zod';
 
 dotenv.config();
 
 export class AI {
     private static readonly API_KEY = process.env.AI_API_KEY;
-    private static readonly API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-    private static readonly MODEL = process.env.AI_MODEL || 'deepseek/deepseek-v3-base:free';
+    private static readonly MODEL = process.env.AI_MODEL;
+    private static mode: ChatGoogleGenerativeAI;
 
     private static validateApiKey() {
         if (!this.API_KEY) {
             throw new Error('AI_API_KEY environment variable is missing or empty');
         }
+        if (!this.MODEL) {
+            throw new Error('AI_MODEL environment variable is missing or empty');
+        }
+    }
+
+    private static getModel() {
+        if (!this.mode) {
+            this.mode = new ChatGoogleGenerativeAI({
+                apiKey: this.API_KEY,
+                model: String(this.MODEL),
+                temperature: 0,
+                maxOutputTokens: 2048,
+            });
+        }
+        return this.mode;
     }
 
     static async generateText(prompt: string): Promise<string> {
-        console.log('[DEBUG] Starting generateText with prompt:', prompt);
-        
         this.validateApiKey();
-        
-        try {
-            console.log('[DEBUG] Making API request to OpenRouter...');
-            
-            const response = await axios.post(this.API_URL, {
-                model: this.MODEL,
-                messages: [
-                    {
-                        role: 'user',
-                        content: prompt
-                    }
-                ]
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${this.API_KEY}`,
-                    'Content-Type': 'application/json',
-                },
-                timeout: 30000
-            });
-
-            console.log('[DEBUG] API response received');
-            console.log('[DEBUG] Response status:', response.status);
-            
-            const content = response.data.choices[0].message.content;
-            console.log('[DEBUG] Generated text:', content);
-            
-            return content;
-        } catch (error) {
-            console.error('[DEBUG] Error in generateText:', error);
-            if (axios.isAxiosError(error)) {
-                console.error('[DEBUG] Axios error details:', {
-                    status: error.response?.status,
-                    statusText: error.response?.statusText,
-                    data: error.response?.data
-                });
-            }
-            throw error;
-        }
+        const model = this.getModel();
+        const message = new HumanMessage(prompt);
+        const response = await model.invoke([message]);
+        return response.content as string;
     }
 
     static async generateStructuredData({ prompt, zodSchema }: { prompt: string, zodSchema: any }) {
-        console.log('[DEBUG] Starting generateStructuredData with prompt:', prompt);
-        
         this.validateApiKey();
+        const model = this.getModel();
+        const jsonPrompt = `${prompt}
+CRITICAL: You must respond with ONLY a valid JSON object. No explanations, no markdown, no code blocks, just pure JSON.
+The response MUST start with { and end with } and be fully valid JSON parseable by JSON.parse().
+
+Respond with valid JSON only:`;
+        const message = new HumanMessage(jsonPrompt);
+        console.log('[DEBUG] Sending AI prompt for structured data:', jsonPrompt);
+        
+        const response = await model.invoke([message]);
+        console.log('[DEBUG] Received raw AI response:', response.content);
+        
+        let rawContent = response.content as string;
+        let data;
         
         try {
-            const enhancedPrompt = `Create educational modules for the topic: ${prompt}
-
-Return a JSON object with this structure:
-{
-  "modules": [
-    {
-      "name": "Module Name",
-      "description": "Module description"
-    }
-  ]
-}
-
-Create 5-8 modules that progress from beginner to advanced. Each module needs a name and description. Return only valid JSON.`;
-
-            console.log('[DEBUG] Enhanced prompt created, length:', enhancedPrompt.length);
-            console.log('[DEBUG] Making API request to OpenRouter...');
+            // Try to extract JSON if it's wrapped in markdown code blocks or other text
+            const jsonRegex = /{[\s\S]*}/;
+            const match = rawContent.match(jsonRegex);
             
-            const response = await axios.post(this.API_URL, {
-                model: this.MODEL,
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'You are a helpful assistant that returns only valid JSON responses for educational content creation.'
-                    },
-                    {
-                        role: 'user',
-                        content: enhancedPrompt
-                    }
-                ],
-                temperature: 0.1,
-                max_tokens: 1500
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${this.API_KEY}`,
-                    'Content-Type': 'application/json',
-                },
-                timeout: 30000
-            });
-
-            console.log('[DEBUG] API response received');
-            console.log('[DEBUG] Response status:', response.status);
-            console.log('[DEBUG] Response data:', response.data);
-            
-            let responseText = response.data.choices[0].message.content;
-            console.log('[DEBUG] Raw response text:', responseText);
-            
-            
-            responseText = responseText.trim();
-    
-            if (responseText.startsWith('```json')) {
-                console.log('[DEBUG] Removing json markdown formatting');
-                responseText = responseText.replace(/```json\n?/, '').replace(/\n?```$/, '');
-            } else if (responseText.startsWith('```')) {
-                console.log('[DEBUG] Removing generic markdown formatting');
-                responseText = responseText.replace(/```\n?/, '').replace(/\n?```$/, '');
-            }
-            
-            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                console.log('[DEBUG] Found JSON match, extracting...');
-                responseText = jsonMatch[0];
+            if (match) {
+                console.log('[DEBUG] Extracted JSON from response:', match[0]);
+                data = JSON.parse(match[0]);
             } else {
-                const startIndex = responseText.indexOf('{');
-                const lastIndex = responseText.lastIndexOf('}');
-                if (startIndex !== -1 && lastIndex !== -1 && lastIndex > startIndex) {
-                    console.log('[DEBUG] Found JSON boundaries, extracting...');
-                    responseText = responseText.substring(startIndex, lastIndex + 1);
-                } else {
-                    console.log('[DEBUG] No valid JSON boundaries found');
-                    throw new Error('AI response does not contain valid JSON structure');
-                }
+                // If no JSON object found, try the raw response
+                data = JSON.parse(rawContent);
             }
-            
-            responseText = responseText.trim();
-            console.log('[DEBUG] Final response text for parsing:', responseText);
-            
-            if (!responseText || responseText === '{}' || responseText === '{') {
-                console.log('[DEBUG] Invalid or incomplete JSON response');
-                throw new Error('AI response is empty or incomplete');
-            }
-            
-            try {
-                console.log('[DEBUG] Attempting to parse JSON...');
-                const parsedJson = JSON.parse(responseText);
-                console.log('[DEBUG] JSON parsed successfully:', parsedJson);
-                
-                console.log('[DEBUG] Validating with zodSchema...');
-                const validated = zodSchema.parse(parsedJson);
-                console.log('[DEBUG] Validation successful');
-                
-                return validated;
-            } catch (parseError) {
-                console.error('[DEBUG] Failed to parse or validate JSON:', parseError);
-                console.error('[DEBUG] Raw response that failed:', responseText);
-                throw new Error('Failed to parse AI response as valid JSON or validation failed');
-            }
-        } catch (error) {
-            console.error('[DEBUG] Error in generateStructuredData:', error);
-            if (axios.isAxiosError(error)) {
-                console.error('[DEBUG] Axios error details:', {
-                    status: error.response?.status,
-                    statusText: error.response?.statusText,
-                    data: error.response?.data
-                });
-            }
-            
-            throw new Error('Failed to generate structured data from AI service');
+        } catch (e) {
+            console.error('[DEBUG] JSON parse error:', e);
+            console.error('[DEBUG] Failed content:', rawContent);
+            throw new Error('Failed to parse JSON from Gemini response');
+        }
+        
+        try {
+            const parsed = zodSchema.parse(data);
+            console.log('[DEBUG] Successfully parsed structured data:', parsed);
+            return parsed;
+        } catch (zodError) {
+            console.error('[DEBUG] Zod validation error:', zodError);
+            throw new Error('AI response did not match expected schema');
         }
     }
-
 }

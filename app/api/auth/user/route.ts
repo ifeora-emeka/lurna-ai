@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        "x-user-id": token.sub
+        "Authorization": `Bearer ${token}`
       },
     });
 

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import User from '../../models/User';
+import { AuthenticatedRequest } from '../../middlewares/auth.middleware';
 
 export const authController = {
     async handleAuthCallback(req: Request, res: Response) {
@@ -46,28 +47,19 @@ export const authController = {
         }
     },
 
-    async getCurrentUser(req: Request, res: Response) {
+    async getCurrentUser(req: AuthenticatedRequest, res: Response) {
         try {
-            const userId = req.headers['x-user-id'] as string;
-
-            if (!userId) {
+            if (!req._user) {
                 res.status(401).json({ error: 'Unauthorized' });
                 return
             }
 
-            const user = await User.findByPk(userId);
-
-            if (!user) {
-                res.status(404).json({ error: 'User not found' });
-                return;
-            }
-
             res.status(200).json({
                 user: {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    image: user.image
+                    id: req._user.id,
+                    name: req._user.name,
+                    email: req._user.email,
+                    image: req._user.image
                 }
             });
             return

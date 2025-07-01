@@ -1,45 +1,97 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import SetsService from './sets.service';
-import { createSetRequestSchema } from './set.dto';
+import { AuthenticatedRequest } from '../../middlewares/auth.middleware';
 
 export const setsController = {
-  async createSet(req: Request, res: Response) {
-    console.log('[DEBUG] Sets controller - createSet called');
-    console.log('[DEBUG] Request body:', req.body);
-    console.log('[DEBUG] Request headers:', req.headers);
-    
+  async createSetFromPrompt(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      console.log('[DEBUG] Validating request data...');
-      const validationResult = createSetRequestSchema.safeParse(req.body);
-
-      if (!validationResult.success) {
-        console.log('[DEBUG] Validation failed:', validationResult.error.errors);
-        res.status(400).json({
-          error: 'Invalid request data',
-          details: validationResult.error.errors
-        });
+      console.log('[DEBUG] createSetFromPrompt called with prompt:', req.body.prompt);
+      
+      if (!req._user) {
+        console.log('[DEBUG] User not authenticated');
+        res.status(401).json({ error: 'User not authenticated' });
         return;
       }
 
-      console.log('[DEBUG] Validation successful');
-      const { prompt } = validationResult.data;
-      console.log('[DEBUG] Extracted prompt:', prompt);
+      console.log('[DEBUG] Calling SetsService.createFromPrompt');
+      const setData = await SetsService.createFromPrompt(req.body.prompt, req._user.id);
+      console.log('[DEBUG] Set created successfully:', setData.id);
 
-      console.log('[DEBUG] Calling SetsService.create...');
-      const modules = await SetsService.create(prompt);
-      console.log('[DEBUG] SetsService.create completed successfully');
-      console.log('[DEBUG] Generated modules:', modules);
-
-      console.log('[DEBUG] Sending successful response...');
-      res.status(200).json({
-        message: 'Learning modules generated successfully',
-        data: modules
+      res.status(201).json({
+        message: 'Learning set created successfully',
+        data: setData
       });
-      console.log('[DEBUG] Response sent successfully');
-    } catch (error) {
+    } catch (error: any) {
+      console.error('[DEBUG] Error in createSetFromPrompt controller:', error);
+      console.error('[DEBUG] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      
+      // Provide more specific error messages based on the error type
+      if (error.message && error.message.includes('AI failed')) {
+        res.status(500).json({ 
+          error: 'Failed to generate content with AI', 
+          details: error.message 
+        });
+        return;
+      }
+      
+      if (error.message && error.message.includes('parse JSON')) {
+        res.status(500).json({ 
+          error: 'Failed to parse AI response', 
+          details: 'The AI generated an invalid response format' 
+        });
+        return;
+      }
+      
+      res.status(500).json({ 
+        error: 'Failed to create learning set',
+        details: error.message || 'Unknown error' 
+      });
+    }
+  },
+
+  async createSet(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      console.log('[DEBUG] createSet called with prompt:', req.body.prompt);
+      
+      if (!req._user) {
+        console.log('[DEBUG] User not authenticated');
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
+
+      console.log('[DEBUG] Calling SetsService.createFromPrompt');
+      const setData = await SetsService.createFromPrompt(req.body.prompt, req._user.id);
+      console.log('[DEBUG] Set created successfully:', setData.id);
+
+      res.status(201).json({
+        message: 'Learning set created successfully',
+        data: setData
+      });
+    } catch (error: any) {
       console.error('[DEBUG] Error in createSet controller:', error);
       console.error('[DEBUG] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-      res.status(500).json({ error: 'Failed to generate learning modules' });
+      
+      // Provide more specific error messages based on the error type
+      if (error.message && error.message.includes('AI failed')) {
+        res.status(500).json({ 
+          error: 'Failed to generate content with AI', 
+          details: error.message 
+        });
+        return;
+      }
+      
+      if (error.message && error.message.includes('parse JSON')) {
+        res.status(500).json({ 
+          error: 'Failed to parse AI response', 
+          details: 'The AI generated an invalid response format' 
+        });
+        return;
+      }
+      
+      res.status(500).json({ 
+        error: 'Failed to create learning set',
+        details: error.message || 'Unknown error' 
+      });
     }
   }
 };

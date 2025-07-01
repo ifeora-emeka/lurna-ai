@@ -1,34 +1,58 @@
 import { AI } from '../../helpers/ai.helper';
-import Set from '../../models/Set';
-import { generateModuleSchema } from './set.dto';
+import { generateSetSchema } from './set.dto';
+import { setCreationPrompt } from './set.prompts';
+import { Set } from '../../models/Set';
+import { GeneratedSetData } from '../../../types/set.types';
+import slugify from 'slugify';
+import { generateRandomId } from '../../helpers/random.helper';
 
 export default class SetsService {
-  static async create(prompt: string) {
-    console.log('[DEBUG] SetsService.create called with prompt:', prompt);
-    
+  static async createFromPrompt(prompt: string, userId: string) {
     try {
-      const enhancedPrompt = `Based on the following learning topic, generate 5-8 educational modules that would help someone learn this subject comprehensively. Each module should have a clear name and optional description.
+      console.log('[DEBUG] Creating set from prompt:', prompt);
+      const enhancedPrompt = setCreationPrompt(prompt);
+      console.log('[DEBUG] Enhanced prompt created');
 
-Topic: ${prompt}
+      let generatedData: GeneratedSetData;
+      try {
+        console.log('[DEBUG] Calling AI.generateStructuredData');
+        generatedData = await AI.generateStructuredData({
+          prompt: enhancedPrompt,
+          zodSchema: generateSetSchema,
+        });
+        console.log('[DEBUG] AI response successfully parsed:', generatedData);
+      } catch (error) {
+        const aiError = error as Error;
+        console.error('[DEBUG] AI processing error:', aiError);
+        throw new Error(`AI failed to generate valid data: ${aiError.message}`);
+      }
 
-Please create modules that progress logically from basic concepts to more advanced topics.`;
-
-      console.log('[DEBUG] Enhanced prompt created:', enhancedPrompt);
-      console.log('[DEBUG] Calling AI.generateStructuredData...');
-      
-      const data = await AI.generateStructuredData({
-        prompt: enhancedPrompt,
-        zodSchema: generateModuleSchema,
+      const baseSlug = slugify(generatedData.name, {
+        lower: true,
+        strict: true,
+        remove: /[*+~.()'"!:@]/g
       });
-      
-      console.log('[DEBUG] AI.generateStructuredData completed successfully');
-      console.log('[DEBUG] Generated data:', data);
-      
-      return data;
+      const uniqueId = generateRandomId();
+      const slug = `${baseSlug}-${uniqueId}`;
+      console.log('[DEBUG] Generated slug:', slug);
+
+      console.log('[DEBUG] Creating set in database');
+      const setData = await Set.create({
+        name: generatedData.name,
+        slug: slug,
+        description: generatedData.description,
+        keywords: generatedData.keywords,
+        originalPrompt: prompt,
+        iconClass: generatedData.iconClass,
+        createdBy: userId,
+      });
+      console.log('[DEBUG] Set created successfully with ID:', setData.id);
+
+      return setData.toJSON();
     } catch (error) {
-      console.error('[DEBUG] Error in SetsService.create:', error);
+      console.error('[DEBUG] Error in SetsService.createFromPrompt:', error);
       console.error('[DEBUG] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-      throw error;
+      throw error; // Re-throw to be handled by the controller
     }
   }
 }

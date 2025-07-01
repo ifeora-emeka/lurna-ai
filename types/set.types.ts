@@ -1,18 +1,21 @@
 export interface SetAttributes {
   id?: number;
   name: string;
+  slug: string;
   description: string;
+  keywords: string[];
+  originalPrompt?: string;
+  iconClass: string;
+  createdBy: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
 
-export interface ModuleData {
+export interface GeneratedSetData {
   name: string;
-  description?: string;
-}
-
-export interface GeneratedModules {
-  modules: ModuleData[];
+  description: string;
+  keywords: string[];
+  iconClass: string;
 }
 
 export interface CreateSetRequest {
@@ -21,5 +24,5 @@ export interface CreateSetRequest {
 
 export interface CreateSetResponse {
   message: string;
-  data: GeneratedModules;
+  data: SetAttributes;
 }

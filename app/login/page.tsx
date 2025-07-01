@@ -15,7 +15,38 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    await signIn('google', { callbackUrl });
+    try {
+      console.log('[DEBUG] Starting Google login process');
+      console.log('[DEBUG] Original callbackUrl:', callbackUrl);
+      
+      // Make sure to use an absolute URL for the callback with proper encoding
+      let absoluteCallback;
+      try {
+        // If it's already an absolute URL, use it
+        if (callbackUrl.startsWith('http')) {
+          absoluteCallback = callbackUrl;
+        } else {
+          // Otherwise, construct a proper absolute URL
+          const baseUrl = window.location.origin;
+          // Ensure the path is properly joined without double slashes
+          const path = callbackUrl.startsWith('/') ? callbackUrl : `/${callbackUrl}`;
+          absoluteCallback = `${baseUrl}${path}`;
+        }
+        
+        console.log('[DEBUG] Constructed absoluteCallback:', absoluteCallback);
+      } catch (urlError) {
+        console.error('[DEBUG] Error constructing callback URL:', urlError);
+        // Fallback to a simple path if there's any error
+        absoluteCallback = '/space';
+        console.log('[DEBUG] Using fallback callback URL:', absoluteCallback);
+      }
+      
+      console.log('[DEBUG] Calling signIn with callbackUrl:', absoluteCallback);
+      await signIn('google', { callbackUrl: absoluteCallback });
+    } catch (error) {
+      console.error('[DEBUG] Login error:', error);
+      setIsLoading(false);
+    }
   };
 
   return (

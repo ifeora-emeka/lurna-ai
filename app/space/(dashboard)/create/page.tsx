@@ -30,10 +30,6 @@ type CreateMethod = 'init' | 'prompt' | 'documents' | 'loading' | 'success';
 
 export default function CreateSetPage() {
     const [createMethod, setCreateMethod] = useState<CreateMethod>('init');
-    
-    
-    
-
 
     const handleSubmit = () => {
         setCreateMethod('loading');
