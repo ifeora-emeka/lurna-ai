@@ -1,3 +1,6 @@
+import { ModuleAttributes } from './module.types';
+import { LearningPathAttributes } from './learning-path.types';
+
 export interface SetAttributes {
   id?: number;
   name: string;
@@ -11,6 +14,8 @@ export interface SetAttributes {
   lastUsed?: Date;
   createdAt?: Date;
   updatedAt?: Date;
+  modules?: ModuleAttributes[];
+  learningPath?: LearningPathAttributes;
 }
 
 export interface GeneratedSetData {

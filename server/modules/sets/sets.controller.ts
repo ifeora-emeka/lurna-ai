@@ -38,7 +38,7 @@ export const setsController = {
         return;
       }
 
-      const setData = await SetsService.getSetBySlug(slug);
+      const setData = await SetsService.getSetBySlug(slug, req._user?.id);
       
       res.status(200).json({
         message: 'Set retrieved successfully',

@@ -1,7 +1,7 @@
 import { AI } from '../../helpers/ai.helper';
 import { generateSetSchema } from './set.dto';
 import { setCreationPrompt } from './set.prompts';
-import { Set, Module } from '../../models';
+import { Set, Module, Unit, LearningPath } from '../../models';
 import { GeneratedSetData } from '../../../types/set.types';
 import slugify from 'slugify';
 import { generateRandomId, getRandomColor } from '../../helpers/random.helper';
@@ -44,7 +44,7 @@ export default class SetsService {
     }
   }
 
-  static async getSetBySlug(slug: string) {
+  static async getSetBySlug(slug: string, userId?: string) {
     try {
       const setData = await Set.findOne({
         where: { slug },
@@ -52,7 +52,14 @@ export default class SetsService {
           {
             model: Module,
             as: 'modules',
-            required: false
+            required: false,
+            include: [
+              {
+                model: Unit,
+                as: 'units',
+                required: false
+              }
+            ]
           }
         ]
       });
@@ -63,7 +70,19 @@ export default class SetsService {
 
       await setData.update({ lastUsed: new Date() });
 
-      return setData.toJSON();
+      const result = setData.toJSON();
+
+      if (userId) {
+        const learningPath = await LearningPath.findOne({
+          where: { setId: setData.id, createdBy: userId }
+        });
+
+        if (learningPath) {
+          result.learningPath = learningPath.toJSON();
+        }
+      }
+
+      return result;
     } catch (error) {
       console.error('[DEBUG] Error in SetsService.getSetBySlug:', error);
       throw error;

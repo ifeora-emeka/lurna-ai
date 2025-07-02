@@ -1,32 +1,30 @@
 export interface UnitAttributes {
   id?: number;
   name: string;
-  slug: string;
   description: string;
-  keywords: string[];
-  createdBy: string;
-  set: number;
-  module: number;
   index: number;
+  setId: number;
+  moduleId: number;
+  createdBy: string;
+  tags: string[];
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 export interface UnitCreationAttributes {
   name: string;
-  slug: string;
   description: string;
-  keywords: string[];
-  createdBy: string;
-  set: number;
-  module: number;
   index: number;
+  setId: number;
+  moduleId: number;
+  createdBy: string;
+  tags: string[];
 }
 
 export interface CreateUnitRequest {
   name: string;
   description: string;
-  keywords: string[];
+  tags: string[];
   setId: number;
   moduleId: number;
   index: number;

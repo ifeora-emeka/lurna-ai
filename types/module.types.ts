@@ -1,3 +1,5 @@
+import { UnitAttributes } from './unit.types';
+
 export interface ModuleAttributes {
   id?: number;
   name: string;
@@ -9,6 +11,7 @@ export interface ModuleAttributes {
   index: number;
   createdAt?: Date;
   updatedAt?: Date;
+  units?: UnitAttributes[];
 }
 
 export interface ModuleCreationAttributes {

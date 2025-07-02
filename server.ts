@@ -4,6 +4,8 @@ import morgan from 'morgan';
 import { setsRouter } from './server/modules/sets/sets.route';
 import { authRouter } from './server/modules/auth/auth.route';
 import { modulesRouter } from './server/modules/modules/modules.route';
+import { unitsRouter } from './server/modules/units/units.route';
+import { learningPathRouter } from './server/modules/learning-path/learning-path.route';
 import { sequelize } from './server/config/database';
 import { initializeAssociations } from './server/models';
 import dotenv from 'dotenv';
@@ -38,6 +40,8 @@ console.log('Registering routes...');
 app.use('/api/sets', setsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/modules', modulesRouter);
+app.use('/api/units', unitsRouter);
+app.use('/api/learning-path', learningPathRouter);
 console.log('Routes registered');
 
 app.get('/', (req, res) => {

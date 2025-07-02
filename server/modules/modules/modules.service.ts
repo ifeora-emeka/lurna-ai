@@ -5,30 +5,6 @@ import { Module, Set } from '../../models';
 import slugify from 'slugify';
 import { generateRandomId } from '../../helpers/random.helper';
 
-// Fallback modules in case AI generation fails
-function generateFallbackModules(setName: string) {
-  return [
-    {
-      name: `Introduction to ${setName}`,
-      description: `Learn the fundamentals and core concepts of ${setName}`,
-      tags: ["introduction", "basics", "fundamentals"],
-      index: 0
-    },
-    {
-      name: `Intermediate ${setName} Concepts`,
-      description: `Build upon the basics with more advanced ${setName} techniques and practices`,
-      tags: ["intermediate", "practical", "techniques"],
-      index: 1
-    },
-    {
-      name: `Advanced ${setName} Topics`,
-      description: `Master complex aspects and specialized knowledge in ${setName}`,
-      tags: ["advanced", "specialized", "mastery"],
-      index: 2
-    }
-  ];
-}
-
 export default class ModulesService {
   static async generateModulesForSet(setSlug: string, userId: string) {
     try {
@@ -62,7 +38,6 @@ export default class ModulesService {
           prompt: enhancedPrompt,
           zodSchema: generateModulesSchema,
         });
-        console.log('[DEBUG] Successfully generated modules:', JSON.stringify(generatedModules).substring(0, 200) + '...');
       } catch (error) {
         const aiError = error as Error;
         console.error('[DEBUG] AI generation error:', aiError);
@@ -70,10 +45,8 @@ export default class ModulesService {
         throw new Error(`AI failed to generate valid modules: ${aiError.message}`);
       }
 
-      // If no modules were generated or the array is empty, use fallback modules
       if (!generatedModules || generatedModules.length === 0) {
-        console.log('[DEBUG] Using fallback modules as AI returned empty result');
-        generatedModules = generateFallbackModules(setData.name);
+        throw new Error('AI failed to generate any modules');
       }
 
       const createdModules = [];
