@@ -6,6 +6,7 @@ import { X, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import Image from 'next/image'
+import Link from 'next/link'
 
 type Props = {
     children?: React.ReactNode;
@@ -27,13 +28,15 @@ export default function AppLayout({ children, leftNavContent, rightNavContent }:
                     `}>
                         <div className='z-50 h-16 sticky top-0 flex justify-between items-center px-4 backdrop-blur'>
                             <div className='flex items-center gap-2'>
-                                <Image 
-                                    src="/logo.svg" 
-                                    alt="Lurna AI" 
-                                    width={120} 
-                                    height={32}
-                                    className='h-8 w-auto'
-                                />
+                                <Link href={`/space`}>
+                                    <Image
+                                        src="/logo.svg"
+                                        alt="Lurna AI"
+                                        width={200}
+                                        height={80}
+                                        className='h-10 w-auto'
+                                    />
+                                </Link>
                             </div>
                         </div>
                         <div className='p-4 pt-6 md:pt-6'>
@@ -42,8 +45,8 @@ export default function AppLayout({ children, leftNavContent, rightNavContent }:
                     </aside>
 
                     {isNavOpen && (
-                        <div 
-                            className='fixed inset-0 bg-black/50 z-30 md:hidden' 
+                        <div
+                            className='fixed inset-0 bg-black/50 z-30 md:hidden'
                             onClick={closeNav}
                         />
                     )}

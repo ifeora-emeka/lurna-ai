@@ -6,7 +6,9 @@ export interface SetAttributes {
   keywords: string[];
   originalPrompt?: string;
   iconClass: string;
+  color: string;
   createdBy: string;
+  lastUsed?: Date;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -16,6 +18,7 @@ export interface GeneratedSetData {
   description: string;
   keywords: string[];
   iconClass: string;
+  color: string;
 }
 
 export interface CreateSetRequest {

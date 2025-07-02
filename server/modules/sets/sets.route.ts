@@ -6,6 +6,7 @@ import { createSetRequestSchema } from './set.dto';
 
 const router = Router();
 
+router.get('/user', authMiddleware, setsController.getUserSets);
 router.get('/:slug', setsController.getSetBySlug);
 router.post('/create/prompt', authMiddleware, validateRequestBody(createSetRequestSchema), setsController.createSetFromPrompt);
 router.post('/create', authMiddleware, validateRequestBody(createSetRequestSchema), setsController.createSet);

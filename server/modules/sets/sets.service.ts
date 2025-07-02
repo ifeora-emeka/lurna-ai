@@ -4,9 +4,46 @@ import { setCreationPrompt } from './set.prompts';
 import { Set, Module } from '../../models';
 import { GeneratedSetData } from '../../../types/set.types';
 import slugify from 'slugify';
-import { generateRandomId } from '../../helpers/random.helper';
+import { generateRandomId, getRandomColor } from '../../helpers/random.helper';
+import { Op } from 'sequelize';
 
 export default class SetsService {
+  static async getUserSets(userId: string, page: number = 1, limit: number = 20, search?: string) {
+    try {
+      const offset = (page - 1) * limit;
+      const where: any = { createdBy: userId };
+      
+      if (search) {
+        where[Op.or] = [
+          { name: { [Op.like]: `%${search}%` } },
+          { description: { [Op.like]: `%${search}%` } },
+          { keywords: { [Op.like]: `%${search}%` } }
+        ];
+      }
+
+      const { count, rows } = await Set.findAndCountAll({
+        where,
+        order: [['lastUsed', 'DESC'], ['updatedAt', 'DESC']],
+        limit,
+        offset
+      });
+
+      return {
+        sets: rows.map(set => set.toJSON()),
+        pagination: {
+          total: count,
+          page,
+          limit,
+          totalPages: Math.ceil(count / limit),
+          hasMore: page * limit < count
+        }
+      };
+    } catch (error) {
+      console.error('[DEBUG] Error in SetsService.getUserSets:', error);
+      throw error;
+    }
+  }
+
   static async getSetBySlug(slug: string) {
     try {
       const setData = await Set.findOne({
@@ -23,6 +60,8 @@ export default class SetsService {
       if (!setData) {
         throw new Error('Set not found');
       }
+
+      await setData.update({ lastUsed: new Date() });
 
       return setData.toJSON();
     } catch (error) {
@@ -63,6 +102,7 @@ export default class SetsService {
         keywords: generatedData.keywords,
         originalPrompt: prompt,
         iconClass: generatedData.iconClass,
+        color: getRandomColor(),
         createdBy: userId,
       });
 

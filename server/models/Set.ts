@@ -11,7 +11,9 @@ export class Set extends Model<SetAttributes> implements SetAttributes {
   declare keywords: string[];
   declare originalPrompt: string;
   declare iconClass: string;
+  declare color: string;
   declare createdBy: string;
+  declare lastUsed: Date;
 }
 
 Set.init(
@@ -47,9 +49,17 @@ Set.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    color: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     createdBy: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    lastUsed: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   {

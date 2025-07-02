@@ -11,4 +11,4 @@ export const generateModuleSchema = z.object({
     index: z.number().min(0),
 }).strict();
 
-export const generateModulesSchema = z.array(generateModuleSchema).min(1).max(20);
+export const generateModulesSchema = z.array(generateModuleSchema).min(1).max(25);

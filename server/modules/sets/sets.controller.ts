@@ -3,6 +3,32 @@ import SetsService from './sets.service';
 import { AuthenticatedRequest } from '../../middlewares/auth.middleware';
 
 export const setsController = {
+  async getUserSets(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      if (!req._user) {
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
+
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const search = req.query.search as string;
+
+      const result = await SetsService.getUserSets(req._user.id, page, limit, search);
+      
+      res.status(200).json({
+        message: 'Sets retrieved successfully',
+        ...result
+      });
+    } catch (error: any) {
+      console.error('[DEBUG] Error in getUserSets controller:', error);
+      res.status(500).json({ 
+        error: 'Failed to retrieve sets',
+        details: error.message || 'Unknown error' 
+      });
+    }
+  },
+
   async getSetBySlug(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { slug } = req.params;

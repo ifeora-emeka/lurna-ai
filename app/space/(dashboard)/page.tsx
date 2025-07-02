@@ -1,158 +1,193 @@
 'use client'
-import React from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import AppBody from '@/components/app-layout/AppBody'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, BookOpen, Users, Clock, Star, UserRoundPen, Eye } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Plus, BookOpen, Clock, Search } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-
-const learningSets = [
-    {
-        id: 1,
-        title: 'CIT235',
-        description: 'Database Management Systems',
-        cardCount: 85,
-        members: 12,
-        lastStudied: '2 days ago',
-        progress: 68,
-        difficulty: 'Medium',
-        color: 'bg-blue-500'
-    },
-    {
-        id: 2,
-        title: 'Intro to JavaScript',
-        description: 'Fundamentals of JavaScript Programming',
-        cardCount: 142,
-        members: 28,
-        lastStudied: '1 day ago',
-        progress: 85,
-        difficulty: 'Beginner',
-        color: 'bg-yellow-500'
-    },
-    {
-        id: 3,
-        title: 'React Fundamentals',
-        description: 'Learn React from the ground up',
-        cardCount: 96,
-        members: 21,
-        lastStudied: '3 hours ago',
-        progress: 42,
-        difficulty: 'Intermediate',
-        color: 'bg-cyan-500'
-    },
-    {
-        id: 4,
-        title: 'Data Structures',
-        description: 'Essential data structures and algorithms',
-        cardCount: 73,
-        members: 15,
-        lastStudied: '5 days ago',
-        progress: 23,
-        difficulty: 'Advanced',
-        color: 'bg-purple-500'
-    },
-    {
-        id: 5,
-        title: 'Web Design Principles',
-        description: 'Modern UI/UX design concepts',
-        cardCount: 58,
-        members: 34,
-        lastStudied: '1 week ago',
-        progress: 91,
-        difficulty: 'Beginner',
-        color: 'bg-pink-500'
-    },
-    {
-        id: 6,
-        title: 'Node.js Backend',
-        description: 'Server-side JavaScript development',
-        cardCount: 124,
-        members: 19,
-        lastStudied: '4 days ago',
-        progress: 56,
-        difficulty: 'Intermediate',
-        color: 'bg-green-500'
-    }
-]
-
-const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-        case 'Beginner': return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20'
-        case 'Intermediate': return 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20'
-        case 'Advanced': return 'text-red-600 bg-red-100 dark:text-red-400 dark:bg-red-900/20'
-        default: return 'text-gray-600 bg-gray-100 dark:text-gray-400 dark:bg-gray-900/20'
-    }
-}
+import { setsApi } from '@/lib/api/sets'
+import SetsLoading from '@/components/placeholders/SetsLoading'
+import { SetAttributes } from '@/types/set.types'
+import { useInfiniteQuery } from '@tanstack/react-query'
 
 export default function SpaceDetailsPage() {
     const router = useRouter();
+    const [search, setSearch] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(search);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+        isError,
+        error,
+        refetch
+    } = useInfiniteQuery({
+        queryKey: ['userSets', debouncedSearch],
+        queryFn: ({ pageParam = 1 }) => setsApi.getUserSets(pageParam, 20, debouncedSearch || undefined),
+        getNextPageParam: (lastPage) => {
+            return lastPage.pagination?.hasMore ? (lastPage.pagination.page + 1) : undefined;
+        },
+        initialPageParam: 1,
+    });
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (loadMoreRef.current) {
+            observer.observe(loadMoreRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+    const handleSetClick = (set: SetAttributes) => {
+        router.push(`/space/set/${set.slug}`);
+    };
+
+    const formatDate = (dateString: string | Date | undefined) => {
+        if (!dateString) return 'Never';
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffTime = Math.abs(now.getTime() - date.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 1) return 'Today';
+        if (diffDays === 2) return 'Yesterday';
+        if (diffDays <= 7) return `${diffDays - 1} days ago`;
+        if (diffDays <= 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+        return date.toLocaleDateString();
+    };
+
+    const allSets = data?.pages.flatMap(page => page.sets) || [];
 
     return (
         <AppBody
-            heading='Your Sets'
-            subHeading='Manage your sets, invite members, and customize settings.'
-            headerRightContent={<>
-                <Button onClick={() => router.push('/space/create')}>
-                    <Plus className='h-4 w-4' />
-                    Create Set
-                </Button>
-            </>}
-        >
-            <div className='grid grid-cols-1 lg:grid-cols-2 gap-3'>
-                {learningSets.map((set) => (
-                    <Card key={set.id} >
-                        <CardHeader className='pb-4'>
-                            <div className='flex items-start justify-between'>
-                                <div className='flex items-center gap-3'>
-                                    <div className={`w-12 h-12 rounded-xl ${set.color} flex items-center justify-center`}>
-                                        <BookOpen className='h-6 w-6 text-white' />
-                                    </div>
-                                    <div>
-                                        <CardTitle className='text-xl font-bold'>
-                                            {set.title}
-                                        </CardTitle>
-                                        <CardDescription className='text-sm'>
+                heading='Your Learning Sets'
+                subHeading='Manage your sets, track progress, and continue learning.'
+                headerRightContent={
+                    <Button onClick={() => router.push('/space/create')}>
+                        <Plus className='h-4 w-4' />
+                        Create Set
+                    </Button>
+                }
+            >
+                <div className="mb-6">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                        <Input
+                            placeholder="Search your learning sets..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="pl-10"
+                        />
+                    </div>
+                </div>
+
+                {isLoading ? (
+                    <SetsLoading />
+                ) : isError ? (
+                    <div className="text-center py-12">
+                        <p className="text-muted-foreground mb-4">Failed to load your sets</p>
+                        <Button onClick={() => refetch()} variant="outline">
+                            Try Again
+                        </Button>
+                    </div>
+                ) : allSets.length === 0 ? (
+                    <div className="text-center py-12">
+                        <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-medium mb-2">No learning sets yet</h3>
+                        <p className="text-muted-foreground mb-6">
+                            {search ? 'No sets match your search.' : 'Create your first learning set to get started.'}
+                        </p>
+                        {!search && (
+                            <Button onClick={() => router.push('/space/create')}>
+                                <Plus className='h-4 w-4' />
+                                Create Your First Set
+                            </Button>
+                        )}
+                    </div>
+                ) : (
+                    <>
+                        <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                            {allSets.map((set: SetAttributes) => (
+                                <Card 
+                                    key={set.id} 
+                                    className="group cursor-pointer hover:shadow-lg transition-all duration-200"
+                                    onClick={() => handleSetClick(set)}
+                                >
+                                    <CardHeader className="pb-3">
+                                        <div className="flex items-center gap-3">
+                                            <div 
+                                                className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
+                                                style={{ backgroundColor: set.color }}
+                                            >
+                                                <i className={`${set.iconClass} text-lg`} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <CardTitle className="text-base font-semibold truncate">
+                                                    {set.name}
+                                                </CardTitle>
+                                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                    <Clock className="h-3 w-3" />
+                                                    <span>{formatDate(set.lastUsed)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="pt-0">
+                                        <CardDescription className="text-sm mb-3 line-clamp-2">
                                             {set.description}
                                         </CardDescription>
-                                    </div>
-                                </div>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(set.difficulty)}`}>
-                                    {set.difficulty}
-                                </span>
-                            </div>
-                        </CardHeader>
-                        <CardContent className='space-y-4'>
-                            <div className='flex items-center justify-between text-sm text-muted-foreground'>
-                                <div className='flex items-center gap-4'>
-                                    <div className='flex items-center gap-1'>
-                                        <BookOpen className='h-4 w-4' />
-                                        <span>{set.cardCount} cards</span>
-                                    </div>
-                                    <div className='flex items-center gap-1'>
-                                        <UserRoundPen className='h-4 w-4' />
-                                        <span>{set.members} assessments</span>
-                                    </div>
-                                    <div className='flex items-center gap-1'>
-                                        <Users className='h-4 w-4' />
-                                        <span>{set.members} members</span>
-                                    </div>
-                                </div>
-                                <div className='flex items-center gap-1'>
-                                    <Star className='h-4 w-4 text-yellow-500' />
-                                    <span>4.7</span>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {set.keywords?.slice(0, 3).map((keyword, index) => (
+                                                <Badge key={index} variant="secondary" className="text-xs">
+                                                    {keyword}
+                                                </Badge>
+                                            ))}
+                                            {set.keywords?.length > 3 && (
+                                                <Badge variant="outline" className="text-xs">
+                                                    +{set.keywords.length - 3}
+                                                </Badge>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
 
-            <div className='flex justify-center pt-8'>
-                <Button variant='outline' size='lg' className='gap-2'>
-                    <Plus className='h-4 w-4' />
-                    Create Your First Set
-                </Button>
-            </div>
-        </AppBody>
+                        {hasNextPage && (
+                            <div ref={loadMoreRef} className="flex justify-center py-8">
+                                {isFetchingNextPage ? (
+                                    <SetsLoading />
+                                ) : (
+                                    <div className="text-muted-foreground">
+                                        Scroll for more sets...
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </>
+                )}
+            </AppBody>
     )
 }

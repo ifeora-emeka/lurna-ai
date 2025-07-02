@@ -1,10 +1,15 @@
+'use client'
 import React from 'react'
 import EachNavLink from './EachNavLink'
-import { Book, Play, BarChart3, Settings, Users, ArrowLeft } from 'lucide-react'
+import {  Settings, Users, ArrowLeft, Route, GalleryVertical, File, ListChecks } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { useParams } from 'next/navigation'
 
 export default function SetNav() {
+  const params = useParams();
+  const path = `/space/set/${params.set_slug}`; 
+
   return (
     <nav className='space-y-6'>
       <div className='flex items-center gap-3 mb-6 p-3 bg-accent/30 rounded-xl border'>
@@ -25,19 +30,19 @@ export default function SetNav() {
         </h3>
         <div className='space-y-1'>
           <EachNavLink
-            label='Overview'
-            href='/set/123'
-            icon={<Book className='h-4 w-4' />}
+            label='Learning Path'
+            href={path}
+            icon={<Route className='h-4 w-4' />}
           />
           <EachNavLink
-            label='Practice'
-            href='/set/123/practice'
-            icon={<Play className='h-4 w-4' />}
+            label='Flashcards'
+            href={`${path}/flashcards`}
+            icon={<GalleryVertical className='h-4 w-4' />}
           />
           <EachNavLink
-            label='Progress'
-            href='/set/123/progress'
-            icon={<BarChart3 className='h-4 w-4' />}
+            label='Files'
+            href={`${path}/files`}
+            icon={<File className='h-4 w-4' />}
           />
         </div>
       </div>
@@ -48,13 +53,18 @@ export default function SetNav() {
         </h3>
         <div className='space-y-1'>
           <EachNavLink
+            label='Curriculum'
+            href={`${path}/curriculum`}
+            icon={<ListChecks className='h-4 w-4' />}
+          />
+          <EachNavLink
             label='Edit Set'
-            href='/set/123/edit'
+            href={`${path}/edit`}
             icon={<Settings className='h-4 w-4' />}
           />
           <EachNavLink
             label='Collaborators'
-            href='/set/123/collaborators'
+            href={`${path}/collaborators`}
             icon={<Users className='h-4 w-4' />}
           />
         </div>

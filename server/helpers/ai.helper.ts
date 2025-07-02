@@ -44,7 +44,6 @@ export class AI {
         this.validateApiKey();
         const model = this.getModel();
         
-        // Determine if we're expecting an array or object based on the schema
         const isArraySchema = zodSchema.element ? true : false;
         
         const jsonPrompt = `${prompt}
@@ -54,16 +53,13 @@ ${isArraySchema ? 'The response should be a JSON array starting with [ and endin
 
 Respond with valid JSON only:`;
         const message = new HumanMessage(jsonPrompt);
-        console.log('[DEBUG] Sending AI prompt for structured data:', jsonPrompt);
         
         const response = await model.invoke([message]);
-        console.log('[DEBUG] Received raw AI response:', response.content);
         
         let rawContent = response.content as string;
         let data;
         
         try {
-            // Try to extract JSON based on expected format (array or object)
             let jsonRegex;
             if (isArraySchema) {
                 jsonRegex = /\[[\s\S]*\]/;
@@ -74,10 +70,8 @@ Respond with valid JSON only:`;
             const match = rawContent.match(jsonRegex);
             
             if (match) {
-                console.log('[DEBUG] Extracted JSON from response:', match[0]);
                 data = JSON.parse(match[0]);
             } else {
-                // If no specific format found, try parsing the raw content
                 data = JSON.parse(rawContent);
             }
         } catch (e) {
@@ -88,12 +82,11 @@ Respond with valid JSON only:`;
         
         try {
             const parsed = zodSchema.parse(data);
-            console.log('[DEBUG] Successfully parsed structured data:', parsed);
             return parsed;
         } catch (zodError) {
             console.error('[DEBUG] Zod validation error:', zodError);
             console.error('[DEBUG] Data that failed validation:', JSON.stringify(data, null, 2));
-            // Try to provide more helpful error messages
+            
             let errorMessage = 'AI response did not match expected schema';
             if (zodError instanceof z.ZodError) {
                 errorMessage += ': ' + zodError.errors.map(e => `${e.path.join('.')}: ${e.message}`).join('; ');
