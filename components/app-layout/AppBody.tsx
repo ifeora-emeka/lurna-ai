@@ -16,8 +16,8 @@ export default function AppBody({ children, heading, subHeading, headerRightCont
 
     return (
         <main className='flex-1 h-screen flex flex-col to-accent/10'>
-            <header className='border-b backdrop-blur z-40 h-16 sticky top-0 flex justify-between items-center px-4 md:px-6'>
-                <div className='flex items-center gap-3'>
+            <header className='border-b backdrop-blur z-40 h-16 sticky top-0 flex justify-between items-center px-4 md:px-6 select-none'>
+                <div className='flex items-center gap-3 max-w-[70%] flex-1'>
                     <Button 
                         size='icon' 
                         variant='ghost' 
@@ -26,12 +26,12 @@ export default function AppBody({ children, heading, subHeading, headerRightCont
                     >
                         <AlignLeft className='h-4 w-4' />
                     </Button>
-                    <div>
+                    <div className='grid grid-cols-1'>
                         {heading && (
-                            <h1 className='text-lg font-semibold text-foreground'>{heading}</h1>
+                            <h1 className='text-lg font-semibold text-foreground truncate'>{heading}</h1>
                         )}
                         {subHeading && (
-                            <p className='text-sm text-muted-foreground hidden sm:block'>{subHeading}</p>
+                            <p className='text-sm text-muted-foreground truncate'>{subHeading}</p>
                         )}
                     </div>
                 </div>

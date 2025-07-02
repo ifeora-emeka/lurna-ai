@@ -22,7 +22,7 @@ The response must be valid JSON that can be parsed with JSON.parse() and match t
   "name": "Learning Set Name",
   "description": "Brief description of what you'll learn",
   "keywords": ["keyword-1", "keyword-2", "keyword-3"],
-  "iconClass": "fa-code"
+  "iconClass": "fas fa-code"
 }
 
 Do not include any explanations or text outside the JSON object.`;

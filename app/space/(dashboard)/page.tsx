@@ -132,7 +132,7 @@ export default function SpaceDetailsPage() {
                             {allSets.map((set: SetAttributes) => (
                                 <Card 
                                     key={set.id} 
-                                    className="group cursor-pointer hover:shadow-lg transition-all duration-200"
+                                    className="group cursor-pointer hover:shadow-md transition-all duration-200 hover:bg-card"
                                     onClick={() => handleSetClick(set)}
                                 >
                                     <CardHeader className="pb-3">
@@ -141,9 +141,9 @@ export default function SpaceDetailsPage() {
                                                 className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
                                                 style={{ backgroundColor: set.color }}
                                             >
-                                                <i className={`${set.iconClass} text-lg`} />
+                                                <i className={`fas ${set.iconClass} text-lg`} />
                                             </div>
-                                            <div className="flex-1 min-w-0">
+                                            <div className="flex-1 min-w-0 truncate grid grid-cols-1">
                                                 <CardTitle className="text-base font-semibold truncate">
                                                     {set.name}
                                                 </CardTitle>

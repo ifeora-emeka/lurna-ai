@@ -23,7 +23,7 @@ export default function AppLayout({ children, leftNavContent, rightNavContent }:
                 <div className='w-full 2xl:w-[1400px] flex relative'>
                     <aside className={`
                         fixed md:sticky top-0 h-screen transition-transform duration-300 ease-in-out z-50
-                        w-[280px] md:w-[280px]
+                        w-[280px] md:w-[280px] select-none bg-background md:bg-transparent
                         ${isNavOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
                     `}>
                         <div className='z-50 h-16 sticky top-0 flex justify-between items-center px-4 backdrop-blur'>

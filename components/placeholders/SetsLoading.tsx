@@ -6,7 +6,7 @@ export default function SetsLoading() {
     return (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, index) => (
-                <Card key={index} className="group cursor-pointer hover:shadow-lg transition-all duration-200 bg-card/5">
+                <Card key={index} className="group cursor-pointer transition-all duration-200 bg-card/5">
                     <CardHeader className="pb-3">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg flex items-center justify-center">
