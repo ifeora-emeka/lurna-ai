@@ -6,7 +6,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-lato);
+  --font-poppins: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -119,4 +120,42 @@
   /* body {
     @apply bg-background text-foreground;
   } */
+}
+
+.markdown-wrapper {
+  width: 100%;
+}
+
+.markdown-wrapper pre {
+  position: relative;
+}
+
+.markdown-wrapper pre code {
+  padding: 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-family: var(--font-geist-mono);
+}
+
+.markdown-wrapper ul li::marker {
+  color: hsl(var(--primary));
+}
+
+.markdown-wrapper ol li::marker {
+  color: hsl(var(--primary));
+}
+
+.markdown-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.markdown-wrapper .prose :where(a):not(:where([class~="not-prose"] *)) {
+  text-decoration: none;
+  border-bottom: 1px solid hsl(var(--primary));
+  transition: border-color 0.2s ease;
+}
+
+.markdown-wrapper .prose :where(a):not(:where([class~="not-prose"] *)):hover {
+  border-color: transparent;
 }

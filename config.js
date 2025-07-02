@@ -1,17 +1,15 @@
-import { Sequelize, Options } from 'sequelize';
-import path from 'path';
-import fs from 'fs';
-import dotenv from 'dotenv';
+const path = require('path');
+try {
+  require('dotenv').config();
+} catch (e) {
+  console.log('Dotenv not loaded, using environment variables');
+}
 
-dotenv.config();
-
-const getDbConfig = (): Options => {
-  // Get database URL from environment variables if available
+const getDbConfig = () => {
   const dbUrl = process.env.DATABASE_URL;
   
   if (dbUrl && process.env.NODE_ENV === 'production') {
-    // If using a cloud database (e.g., PostgreSQL)
-    // Parse the database URL
+   
     const matches = dbUrl.match(/^postgres:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)$/);
     
     if (matches) {
@@ -20,7 +18,7 @@ const getDbConfig = (): Options => {
         username,
         password,
         host,
-        port: parseInt(port),
+        port,
         database,
         dialect: 'postgres',
         dialectOptions: {
@@ -35,22 +33,25 @@ const getDbConfig = (): Options => {
   }
   
   // Default to SQLite for development and testing
-  const dbDir = path.join(process.cwd(), 'database');
-  const dbPath = path.join(dbDir, 
-    process.env.NODE_ENV === 'test' ? 'test_lurna.sqlite' : 'lurna.sqlite');
-
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
-
   return {
     dialect: 'sqlite',
-    storage: dbPath,
+    storage: path.join(__dirname, 'database', 
+      process.env.NODE_ENV === 'test' ? 'test_lurna.sqlite' : 'lurna.sqlite'),
     logging: false
   };
 };
 
 const config = getDbConfig();
-export const sequelize = new Sequelize(config);
 
-export default sequelize;
+module.exports = {
+  development: {
+    ...config,
+    logging: console.log
+  },
+  test: {
+    ...config
+  },
+  production: {
+    ...config
+  }
+};

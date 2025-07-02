@@ -199,7 +199,6 @@ export default function CreateSetPage() {
                                         </Button>
                                         <Button
                                             onClick={() => createdSet?.slug && router.push(`/space/set/${createdSet.slug}`)}
-                                            className="px-8 bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600 shadow-lg hover:shadow-xl transition-all duration-200"
                                         >
                                             View Learning Set
                                         </Button>

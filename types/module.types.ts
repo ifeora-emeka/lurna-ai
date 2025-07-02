@@ -5,7 +5,7 @@ export interface ModuleAttributes {
   name: string;
   slug: string;
   description: string;
-  set: number;
+  setId: number;
   createdBy: string;
   tags: string[];
   index: number;
@@ -18,7 +18,7 @@ export interface ModuleCreationAttributes {
   name: string;
   slug: string;
   description: string;
-  set: number;
+  setId: number;
   createdBy: string;
   tags: string[];
   index: number;

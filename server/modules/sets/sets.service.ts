@@ -23,7 +23,7 @@ export default class SetsService {
 
       const { count, rows } = await Set.findAndCountAll({
         where,
-        order: [['lastUsed', 'DESC'], ['updatedAt', 'DESC']],
+        order: [['lastUsed', 'DESC'], ['updated_at', 'DESC']],
         limit,
         offset
       });

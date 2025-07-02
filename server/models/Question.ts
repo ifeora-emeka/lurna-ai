@@ -1,23 +1,24 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database';
-import { AssessmentAttributes, AssessmentCreationAttributes } from '../../types/assessment.types';
+import { QuestionAttributes, QuestionCreationAttributes } from '../../types/question.types';
 
-export class Assessment extends Model<AssessmentAttributes, AssessmentCreationAttributes> implements AssessmentAttributes {
+export class Question extends Model<QuestionAttributes, QuestionCreationAttributes> implements QuestionAttributes {
   declare id: number;
   declare createdBy: string;
   declare setId: number;
   declare moduleId: number;
   declare unitId: number;
-  declare title: string;
-  declare summary: string;
-  declare isTimed: boolean;
-  declare difficultyLevel: string;
+  declare content: string;
+  declare type: string;
+  declare environment: string;
+  declare options: Array<{id: string; content: string; isCorrect: boolean}>;
+  declare hint: string;
 
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 }
 
-Assessment.init(
+Question.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -44,31 +45,36 @@ Assessment.init(
       allowNull: false,
       field: 'unit_id',
     },
-    title: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    summary: {
+    content: {
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    isTimed: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    },
-    difficultyLevel: {
+    type: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    environment: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'default',
+    },
+    options: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      defaultValue: [],
+    },
+    hint: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
   },
   {
     sequelize,
-    tableName: 'assessments',
+    tableName: 'questions',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',
   }
 );
 
-export default Assessment;
+export default Question;

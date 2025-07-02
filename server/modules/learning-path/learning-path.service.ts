@@ -1,4 +1,4 @@
-import { LearningPath, Set } from '../../models';
+import { LearningPath, Set, Module } from '../../models';
 
 export default class LearningPathService {
   static async createLearningPath(setId: number, userId: string) {
@@ -10,11 +10,22 @@ export default class LearningPathService {
       if (existingPath) {
         return existingPath.toJSON();
       }
-
+      
+      const modules = await Module.findAll({
+        where: { setId },
+        order: [['index', 'ASC']]
+      });
+      
+      if (!modules || modules.length === 0) {
+        throw new Error('Cannot create learning path: Set has no modules');
+      }
+      
+      const firstModule = modules[0];
+      
       const learningPath = await LearningPath.create({
         setId,
         createdBy: userId,
-        currentModuleId: null,
+        currentModuleId: firstModule.id,
         currentUnitId: null,
         lastUsed: new Date(),
         isCompleted: false

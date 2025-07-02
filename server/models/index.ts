@@ -4,6 +4,8 @@ import { Module } from './Module';
 import { Unit } from './Unit';
 import { LearningPath } from './LearningPath';
 import { Assessment } from './Assessment';
+import { Question } from './Question';
+import { AssessmentResult } from './AssessmentResult';
 import { initializeAssociations } from './associations';
 
 export { initializeAssociations };
@@ -14,5 +16,7 @@ export {
   Module,
   Unit,
   LearningPath,
-  Assessment
+  Assessment,
+  Question,
+  AssessmentResult
 };

@@ -1,7 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database';
 import { SetAttributes } from '../../types/set.types';
-// Removed import
 
 export class Set extends Model<SetAttributes> implements SetAttributes {
   declare id: number;
@@ -44,10 +43,12 @@ Set.init(
     originalPrompt: {
       type: DataTypes.TEXT,
       allowNull: true,
+      field: 'original_prompt',
     },
     iconClass: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'icon_class',
     },
     color: {
       type: DataTypes.STRING,
@@ -56,16 +57,20 @@ Set.init(
     createdBy: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'created_by',
     },
     lastUsed: {
       type: DataTypes.DATE,
       allowNull: true,
+      field: 'last_used',
     },
   },
   {
     sequelize,
     tableName: 'sets',
     timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
 

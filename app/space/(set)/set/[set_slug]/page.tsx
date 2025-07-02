@@ -11,14 +11,6 @@ export default function SetPage() {
         <AppBody
             heading={set?.name || 'Set Details'}
             subHeading={set?.description || 'Explore your set details and statistics.'}
-            headerRightContent={
-                <div 
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-white"
-                    style={{ backgroundColor: set?.color }}
-                >
-                    <i className={`${set?.iconClass} fas text-xl`}></i>
-                </div>
-            }
         >
             <LearningPathGetStarted/>
             <ModuleGetStarted/>

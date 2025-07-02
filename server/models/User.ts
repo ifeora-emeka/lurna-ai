@@ -21,16 +21,25 @@ User.init(
     },
     name: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     email: {
       type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
+      allowNull: true,
+      unique: {
+        name: 'email',
+        msg: 'Email address already in use'
+      },
+      validate: {
+        isEmail: {
+          msg: 'Please provide a valid email address'
+        }
+      }
     },
     emailVerified: {
       type: DataTypes.DATE,
       allowNull: true,
+      field: 'email_verified',
     },
     image: {
       type: DataTypes.STRING,
@@ -41,6 +50,9 @@ User.init(
     sequelize,
     tableName: 'users',
     modelName: 'User',
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
 

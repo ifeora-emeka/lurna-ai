@@ -12,8 +12,8 @@ export default function AssistantAvatar({ size, className }: Props) {
         <Image
             src="/assistant/1.jpg"
             alt="Lurna AI"
-            width={size || 40}
-            height={size || 40}
+            width={size || 60}
+            height={size || 60}
             className={cn('rounded-full shadow-sm border border-secondary', className)}
         />
     )

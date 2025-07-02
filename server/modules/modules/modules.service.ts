@@ -14,9 +14,8 @@ export default class ModulesService {
         throw new Error('Set not found');
       }
 
-      // Check if modules already exist for this set
       const existingModules = await Module.findAll({ 
-        where: { set: setData.id },
+        where: { setId: setData.id },
         order: [['index', 'ASC']]
       });
 
@@ -64,7 +63,7 @@ export default class ModulesService {
           name: moduleData.name,
           slug: slug,
           description: moduleData.description,
-          set: setData.id!,
+          setId: setData.id!,
           createdBy: userId,
           tags: moduleData.tags,
           index: moduleData.index,

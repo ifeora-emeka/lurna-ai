@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Lato, Poppins, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import AuthProvider from "@/components/providers/AuthProvider";
-import { QueryProvider } from "@/components/providers/QueryProvider";
+import Providers from "./Providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const lato = Lato({
+  weight: ['400', '700'],
+  variable: "--font-lato",
+  subsets: ["latin"],
+});
+
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700'],
+  variable: "--font-poppins",
   subsets: ["latin"],
 });
 
@@ -33,13 +39,11 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-gradient-to-br from-secondary/30 via-background to-primary/20 text-foreground`}
+        className={`${lato.variable} ${poppins.variable} ${geistMono.variable} antialiased min-h-screen bg-gradient-to-br from-secondary/30 via-background to-primary/20 text-foreground font-lato`}
       >
-        <AuthProvider>
-          <QueryProvider>
-            {children}
-          </QueryProvider>
-        </AuthProvider>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

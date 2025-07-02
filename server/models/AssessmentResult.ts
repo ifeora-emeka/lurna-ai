@@ -1,39 +1,36 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database';
-import { UnitAttributes, UnitCreationAttributes } from '../../types/unit.types';
+import { AssessmentResultAttributes, AssessmentResultCreationAttributes } from '../../types/assessment-result.types';
 
-export class Unit extends Model<UnitAttributes, UnitCreationAttributes> implements UnitAttributes {
+export class AssessmentResult extends Model<AssessmentResultAttributes, AssessmentResultCreationAttributes> implements AssessmentResultAttributes {
   declare id: number;
-  declare name: string;
-  declare description: string;
-  declare index: number;
+  declare createdBy: string;
   declare setId: number;
   declare moduleId: number;
-  declare createdBy: string;
-  declare tags: string[];
+  declare unitId: number;
+  declare result: Array<{
+    question: number;
+    correctAnswerText: string;
+    correctOptionsIDs: string[];
+    isCorrect: boolean;
+  }>;
+  declare advice: string;
 
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
 }
 
-Unit.init(
+AssessmentResult.init(
   {
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
-    name: {
+    createdBy: {
       type: DataTypes.STRING,
       allowNull: false,
-    },
-    description: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    index: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
+      field: 'created_by',
     },
     setId: {
       type: DataTypes.INTEGER,
@@ -45,24 +42,27 @@ Unit.init(
       allowNull: false,
       field: 'module_id',
     },
-    createdBy: {
-      type: DataTypes.STRING,
+    unitId: {
+      type: DataTypes.INTEGER,
       allowNull: false,
-      field: 'created_by',
+      field: 'unit_id',
     },
-    tags: {
+    result: {
       type: DataTypes.JSON,
       allowNull: false,
-      defaultValue: [],
+    },
+    advice: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
   },
   {
     sequelize,
-    tableName: 'units',
+    tableName: 'assessment_results',
     timestamps: true,
     createdAt: 'created_at',
     updatedAt: 'updated_at',
   }
 );
 
-export default Unit;
+export default AssessmentResult;

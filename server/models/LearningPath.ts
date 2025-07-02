@@ -30,6 +30,7 @@ LearningPath.init(
     createdBy: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'created_by',
     },
     currentModuleId: {
       type: DataTypes.INTEGER,
@@ -45,17 +46,21 @@ LearningPath.init(
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW,
+      field: 'last_used',
     },
     isCompleted: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false,
+      field: 'is_completed',
     },
   },
   {
     sequelize,
     tableName: 'learning_paths',
     timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
 

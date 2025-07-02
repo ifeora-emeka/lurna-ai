@@ -81,7 +81,6 @@ export const setsController = {
       console.error('[DEBUG] Error in createSetFromPrompt controller:', error);
       console.error('[DEBUG] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       
-      // Provide more specific error messages based on the error type
       if (error.message && error.message.includes('AI failed')) {
         res.status(500).json({ 
           error: 'Failed to generate content with AI', 
@@ -127,7 +126,6 @@ export const setsController = {
       console.error('[DEBUG] Error in createSet controller:', error);
       console.error('[DEBUG] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
       
-      // Provide more specific error messages based on the error type
       if (error.message && error.message.includes('AI failed')) {
         res.status(500).json({ 
           error: 'Failed to generate content with AI', 

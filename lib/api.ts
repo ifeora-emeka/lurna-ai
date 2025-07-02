@@ -47,7 +47,6 @@ const createApiInstance = (): AxiosInstance => {
     (response) => {
       console.log('[DEBUG] API Response interceptor - received response');
       console.log('[DEBUG] Response status:', response.status);
-      console.log('[DEBUG] Response data:', response.data);
       return response;
     },
     (error) => {

@@ -55,7 +55,6 @@ export const authOptions: NextAuthOptions = {
                 userSession.user.id = token.sub;
             }
             
-            // Add the raw JWT token to the session for use in API calls
             (userSession as any).accessToken = process.env.NEXTAUTH_SECRET 
                 ? jwt.sign(token as any, process.env.NEXTAUTH_SECRET)
                 : null;
@@ -70,23 +69,15 @@ export const authOptions: NextAuthOptions = {
             return token as JWT;
         },
         async redirect({ url, baseUrl }) {
-            console.log('[NextAuth] Redirect callback');
-            console.log('[NextAuth] Redirect URL:', url);
-            console.log('[NextAuth] Base URL:', baseUrl);
-            
-            // Safely handle redirect URLs
             if (url.startsWith('/')) {
-                // For relative URLs, prepend the base URL
                 const resolvedUrl = `${baseUrl}${url}`;
                 console.log('[NextAuth] Resolved redirect to:', resolvedUrl);
                 return resolvedUrl;
             } else if (url.startsWith(baseUrl)) {
-                // URLs that are already absolute and from the same origin
                 console.log('[NextAuth] Using absolute URL:', url);
                 return url;
             }
             
-            // For any other URL, redirect to the base URL
             console.log('[NextAuth] Defaulting to base URL');
             return baseUrl;
         }
@@ -97,6 +88,6 @@ export const authOptions: NextAuthOptions = {
     },
     session: {
         strategy: "jwt",
-        maxAge: 30 * 24 * 60 * 60, // 30 days
+        maxAge: 30 * 24 * 60 * 60,
     },
 };

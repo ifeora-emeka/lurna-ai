@@ -6,11 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Plus, BookOpen, Clock, Search } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { setsApi } from '@/lib/api/sets'
 import SetsLoading from '@/components/placeholders/SetsLoading'
 import { SetAttributes } from '@/types/set.types'
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { useRouter } from 'next13-progressbar'
 
 export default function SpaceDetailsPage() {
     const router = useRouter();
@@ -128,22 +128,22 @@ export default function SpaceDetailsPage() {
                     </div>
                 ) : (
                     <>
-                        <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
+                        <div className='grid gap-6 grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3'>
                             {allSets.map((set: SetAttributes) => (
                                 <Card 
                                     key={set.id} 
-                                    className="group cursor-pointer hover:shadow-md transition-all duration-200 hover:bg-card"
+                                    className="group cursor-pointer hover:shadow-sm shadow-none transition-all duration-200 hover:bg-card bg-card/50"
                                     onClick={() => handleSetClick(set)}
                                 >
                                     <CardHeader className="pb-3">
                                         <div className="flex items-center gap-3">
                                             <div 
-                                                className="w-10 h-10 rounded-lg flex items-center justify-center text-white"
+                                                className="w-10 h-10 rounded-lg flex self-start items-center justify-center text-white"
                                                 style={{ backgroundColor: set.color }}
                                             >
                                                 <i className={`fas ${set.iconClass} text-lg`} />
                                             </div>
-                                            <div className="flex-1 min-w-0 truncate grid grid-cols-1">
+                                            <div className="flex-1 min-w-0 grid grid-cols-1">
                                                 <CardTitle className="text-base font-semibold truncate">
                                                     {set.name}
                                                 </CardTitle>

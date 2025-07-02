@@ -1,14 +1,13 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from '../config/database';
 import { ModuleAttributes, ModuleCreationAttributes } from '../../types/module.types';
-// Imports removed to solve circular dependency
 
 export class Module extends Model<ModuleAttributes, ModuleCreationAttributes> implements ModuleAttributes {
   declare id: number;
   declare name: string;
   declare slug: string;
   declare description: string;
-  declare set: any;
+  declare setId: number;
   declare createdBy: string;
   declare tags: string[];
   declare index: number;
@@ -37,13 +36,15 @@ Module.init(
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    set: {
+    setId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: 'set_id',
     },
     createdBy: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'created_by',
     },
     tags: {
       type: DataTypes.JSON,
@@ -59,6 +60,8 @@ Module.init(
     sequelize,
     tableName: 'modules',
     timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   }
 );
 

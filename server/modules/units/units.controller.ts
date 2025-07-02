@@ -45,6 +45,24 @@ export const unitsController = {
         return;
       }
       
+      if (error.name === 'SequelizeUniqueConstraintError' || 
+          (error.original && error.original.code === 'SQLITE_CONSTRAINT')) {
+        console.error('[DEBUG] Database constraint error:', error.original?.message || error.message);
+        res.status(500).json({ 
+          error: 'Database constraint error', 
+          details: error.original?.message || 'Error storing units in database. Missing required fields.'
+        });
+        return;
+      }
+      
+      if (error.message && error.message.includes('Cannot create units')) {
+        res.status(400).json({ 
+          error: 'Invalid module data', 
+          details: error.message 
+        });
+        return;
+      }
+      
       res.status(500).json({ 
         error: 'Failed to generate units',
         details: error.message || 'Unknown error' 

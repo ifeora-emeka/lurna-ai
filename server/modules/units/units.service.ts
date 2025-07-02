@@ -2,8 +2,6 @@ import { AI } from '../../helpers/ai.helper';
 import { generateUnitsSchema } from './unit.dto';
 import { unitGenerationPrompt } from './units.prompts';
 import { Unit, Module, Set } from '../../models';
-import slugify from 'slugify';
-import { generateRandomId } from '../../helpers/random.helper';
 
 export default class UnitsService {
   static async generateUnitsForModule(moduleId: number, userId: string) {
@@ -22,6 +20,13 @@ export default class UnitsService {
       if (!moduleData) {
         throw new Error('Module not found');
       }
+
+      console.log('[DEBUG] Module data:', {
+        id: moduleData.id,
+        name: moduleData.name,
+        set: moduleData.set,
+        setRelationExists: Boolean(moduleData.get('setRelation'))
+      });
 
       const existingUnits = await Unit.findAll({ 
         where: { moduleId: moduleId },
@@ -58,12 +63,30 @@ export default class UnitsService {
 
       const createdUnits = [];
       
+      const setId = moduleData.get('set');
+      const setFromRelation = moduleData.get('setRelation');
+      
+      console.log('[DEBUG] Module setId:', setId);
+      console.log('[DEBUG] Module setRelation exists:', Boolean(setFromRelation));
+      
+      if (!setId && !setFromRelation) {
+        throw new Error('Cannot create units: Module is not associated with a valid set');
+      }
+      
+      const finalSetId = setId || (setFromRelation ? (setFromRelation as any).id : null);
+      
+      if (!finalSetId) {
+        throw new Error('Cannot create units: Failed to determine set ID from module data');
+      }
+      
+      console.log('[DEBUG] Creating units with setId:', finalSetId);
+      
       for (const unitData of generatedUnits) {
         const unit = await Unit.create({
           name: unitData.name,
           description: unitData.description,
-          setId: moduleData.set,
-          moduleId: moduleId,
+          setId: Number(finalSetId),
+          moduleId: Number(moduleId),    
           createdBy: userId,
           tags: unitData.tags,
           index: unitData.index,

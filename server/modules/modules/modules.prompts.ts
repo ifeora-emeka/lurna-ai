@@ -1,7 +1,6 @@
 export const moduleGenerationPrompt = (setName: string, setDescription: string, keywords: string[]): string => {
   console.log('[DEBUG] Generating modules prompt for:', setName);
   console.log('[DEBUG] Set description:', setDescription);
-  console.log('[DEBUG] Keywords:', keywords);
 
   if (!keywords || keywords.length === 0) {
     console.log('[DEBUG] No keywords provided, using default keywords');
