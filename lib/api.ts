@@ -17,14 +17,19 @@ const createApiInstance = (): AxiosInstance => {
       console.log('[DEBUG] Request method:', config.method);
       
       const session = await getSession();
-      console.log('[DEBUG] Session data:', session);
+      console.log('[DEBUG] Session data:', {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userId: session?.user?.id,
+        hasAccessToken: !!(session as any)?.accessToken
+      });
       
       if (session?.user?.id) {
         // Set Authorization header with Bearer token instead of x-user-id
         const token = (session as any).accessToken;
         if (token) {
           config.headers['Authorization'] = `Bearer ${token}`;
-          console.log('[DEBUG] Added Authorization Bearer token header');
+          console.log('[DEBUG] Added Authorization Bearer token header (first 20 chars):', token.substring(0, 20) + '...');
         } else {
           console.log('[DEBUG] No access token found in session');
         }
@@ -32,8 +37,7 @@ const createApiInstance = (): AxiosInstance => {
         console.log('[DEBUG] No session or user ID found');
       }
       
-      console.log('[DEBUG] Final request headers:', config.headers);
-      console.log('[DEBUG] Request data:', config.data);
+      console.log('[DEBUG] Final request headers:', Object.keys(config.headers || {}));
       
       return config;
     },
@@ -55,8 +59,14 @@ const createApiInstance = (): AxiosInstance => {
       console.error('[DEBUG] Error response data:', error.response?.data);
       
       if (error.response?.status === 401) {
-        console.log('[DEBUG] Redirecting to login due to 401 error');
-        window.location.href = '/login';
+        console.log('[DEBUG] Received 401 error');
+        // Only redirect on client-side (browser)
+        if (typeof window !== 'undefined') {
+          console.log('[DEBUG] Redirecting to login due to 401 error');
+          window.location.href = '/login';
+        } else {
+          console.log('[DEBUG] Server-side 401 error - not redirecting');
+        }
       }
       return Promise.reject(error);
     }

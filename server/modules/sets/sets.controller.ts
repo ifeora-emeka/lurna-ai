@@ -38,7 +38,12 @@ export const setsController = {
         return;
       }
 
-      const setData = await SetsService.getSetBySlug(slug, req._user?.id);
+      if (!req._user) {
+        res.status(401).json({ error: 'User not authenticated' });
+        return;
+      }
+
+      const setData = await SetsService.getSetBySlug(slug, req._user.id);
       
       res.status(200).json({
         message: 'Set retrieved successfully',
@@ -49,6 +54,11 @@ export const setsController = {
       
       if (error.message === 'Set not found') {
         res.status(404).json({ error: 'Set not found' });
+        return;
+      }
+      
+      if (error.message === 'User ID is required') {
+        res.status(401).json({ error: 'User authentication required' });
         return;
       }
       

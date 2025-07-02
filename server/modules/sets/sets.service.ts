@@ -44,8 +44,12 @@ export default class SetsService {
     }
   }
 
-  static async getSetBySlug(slug: string, userId?: string) {
+  static async getSetBySlug(slug: string, userId: string) {
     try {
+      if (!userId) {
+        throw new Error('User ID is required');
+      }
+
       const setData = await Set.findOne({
         where: { slug },
         include: [
@@ -72,14 +76,12 @@ export default class SetsService {
 
       const result = setData.toJSON();
 
-      if (userId) {
-        const learningPath = await LearningPath.findOne({
-          where: { setId: setData.id, createdBy: userId }
-        });
+      const learningPath = await LearningPath.findOne({
+        where: { setId: setData.id, createdBy: userId }
+      });
 
-        if (learningPath) {
-          result.learningPath = learningPath.toJSON();
-        }
+      if (learningPath) {
+        result.learningPath = learningPath.toJSON();
       }
 
       return result;

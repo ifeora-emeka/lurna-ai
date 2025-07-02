@@ -55,9 +55,23 @@ export const authOptions: NextAuthOptions = {
                 userSession.user.id = token.sub;
             }
             
-            (userSession as any).accessToken = process.env.NEXTAUTH_SECRET 
-                ? jwt.sign(token as any, process.env.NEXTAUTH_SECRET)
-                : null;
+            if (process.env.NEXTAUTH_SECRET) {
+                (userSession as any).accessToken = jwt.sign(
+                    { 
+                        sub: token.sub,
+                        email: token.email,
+                        name: token.name,
+                        iat: Math.floor(Date.now() / 1000),
+                        exp: Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60)
+                    }, 
+                    process.env.NEXTAUTH_SECRET
+                );
+            }
+            
+            console.log('[NextAuth] Session callback completed', { 
+                userId: userSession.user?.id, 
+                hasAccessToken: !!(userSession as any).accessToken 
+            });
             
             return userSession;
         },
