@@ -101,4 +101,74 @@ export default class UnitsService {
       throw error;
     }
   }
+
+  static async getOrGenerateNextUnit({setId, currentUnitID, currentModuleId}: {setId:number, currentUnitID:number, currentModuleId:number}) {
+    try {
+      const currentUnit = await Unit.findByPk(currentUnitID);
+      if (!currentUnit) {
+        throw new Error('Current unit not found');
+      }
+
+      const nextUnitInSameModule = await Unit.findOne({
+        where: {
+          moduleId: currentModuleId,
+          index: currentUnit.index + 1
+        }
+      });
+
+      if (nextUnitInSameModule) {
+        return {
+          nextUnit: nextUnitInSameModule.toJSON(),
+          isNewModule: false
+        };
+      }
+
+      const currentModule = await Module.findByPk(currentModuleId);
+      if (!currentModule) {
+        throw new Error('Current module not found');
+      }
+
+      const nextModule = await Module.findOne({
+        where: {
+          setId,
+          index: currentModule.index + 1
+        },
+        include: [{
+          model: Unit,
+          as: 'units',
+          required: false,
+          order: [['index', 'ASC']]
+        }]
+      });
+
+      if (!nextModule) {
+        return {
+          nextUnit: null,
+          isNewModule: false,
+          isCompleted: true
+        };
+      }
+
+      let firstUnitOfNextModule = (nextModule as any).units?.[0];
+
+      if (!firstUnitOfNextModule) {
+        const generatedUnits = await this.generateUnitsForModule(nextModule.id, currentUnit.createdBy);
+        if (generatedUnits && generatedUnits.length > 0) {
+          firstUnitOfNextModule = generatedUnits[0];
+        }
+      }
+
+      if (!firstUnitOfNextModule) {
+        throw new Error('Failed to create units for the next module');
+      }
+
+      return {
+        nextUnit: firstUnitOfNextModule,
+        isNewModule: true
+      };
+    } catch (error) {
+      console.error('[DEBUG] Error in UnitsService.getOrGenerateNextUnit:', error);
+      throw error;
+    }
+  }
 }

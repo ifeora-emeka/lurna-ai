@@ -15,6 +15,8 @@ export class AssessmentResult extends Model<AssessmentResultAttributes, Assessme
     isCorrect: boolean;
   }>;
   declare advice: string;
+  declare difficultyLevel: string;
+  declare isCompleted: boolean;
 
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -54,6 +56,20 @@ AssessmentResult.init(
     advice: {
       type: DataTypes.TEXT,
       allowNull: true,
+    },
+    difficultyLevel: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      field: 'difficulty_level',
+      validate: {
+        isIn: [['easy', 'medium', 'hard']]
+      }
+    },
+    isCompleted: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'is_completed',
     },
   },
   {

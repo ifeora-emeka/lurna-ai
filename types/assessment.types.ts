@@ -5,9 +5,10 @@ export interface AssessmentAttributes {
   moduleId: number;
   unitId: number;
   title: string;
-  summary: string;
-  isTimed: boolean;
+  description: string;
+  type: string;
   difficultyLevel: string;
+  timeLimit?: number | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -18,9 +19,10 @@ export interface AssessmentCreationAttributes {
   moduleId: number;
   unitId: number;
   title: string;
-  summary: string;
-  isTimed?: boolean;
+  description: string;
+  type: string;
   difficultyLevel: string;
+  timeLimit?: number | null;
 }
 
 export interface CreateAssessmentRequest {
@@ -28,9 +30,10 @@ export interface CreateAssessmentRequest {
   moduleId: number;
   unitId: number;
   title: string;
-  summary: string;
-  isTimed?: boolean;
+  description: string;
+  type: string;
   difficultyLevel: string;
+  timeLimit?: number | null;
 }
 
 export interface CreateAssessmentResponse {

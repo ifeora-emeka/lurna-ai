@@ -14,7 +14,9 @@ export interface QuestionAttributes {
   type: string;
   environment: string;
   options: QuestionOption[];
-  hint: string;
+  correctAnswers: string[];
+  explanation: string | null;
+  hint: string | null;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -28,7 +30,9 @@ export interface QuestionCreationAttributes {
   type: string;
   environment?: string;
   options: QuestionOption[];
-  hint?: string;
+  correctAnswers: string[];
+  explanation?: string | null;
+  hint?: string | null;
 }
 
 export interface CreateQuestionRequest {
@@ -39,7 +43,9 @@ export interface CreateQuestionRequest {
   type: string;
   environment?: string;
   options: QuestionOption[];
-  hint?: string;
+  correctAnswers: string[];
+  explanation?: string | null;
+  hint?: string | null;
 }
 
 export interface CreateQuestionResponse {

@@ -12,7 +12,9 @@ export class Question extends Model<QuestionAttributes, QuestionCreationAttribut
   declare type: string;
   declare environment: string;
   declare options: Array<{id: string; content: string; isCorrect: boolean}>;
-  declare hint: string;
+  declare correctAnswers: string[];
+  declare explanation: string | null;
+  declare hint: string | null;
 
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -62,6 +64,15 @@ Question.init(
       type: DataTypes.JSON,
       allowNull: false,
       defaultValue: [],
+    },
+    correctAnswers: {
+      type: DataTypes.JSON,
+      allowNull: false,
+      field: 'correct_answers',
+    },
+    explanation: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
     hint: {
       type: DataTypes.TEXT,

@@ -11,6 +11,8 @@ export interface AssessmentResultAttributes {
     isCorrect: boolean;
   }>;
   advice: string;
+  difficultyLevel: string;
+  isCompleted: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -27,6 +29,8 @@ export interface AssessmentResultCreationAttributes {
     isCorrect: boolean;
   }>;
   advice?: string;
+  difficultyLevel: string;
+  isCompleted?: boolean;
 }
 
 export interface CreateAssessmentResultRequest {
@@ -40,6 +44,8 @@ export interface CreateAssessmentResultRequest {
     isCorrect: boolean;
   }>;
   advice?: string;
+  difficultyLevel: string;
+  isCompleted?: boolean;
 }
 
 export interface CreateAssessmentResultResponse {

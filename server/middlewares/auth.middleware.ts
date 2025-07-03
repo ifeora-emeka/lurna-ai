@@ -8,8 +8,7 @@ interface AuthenticatedRequest extends Request {
 
 export const authMiddleware = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        console.log('[AUTH] Processing request:', req.method, req.path);
-        console.log('[AUTH] Headers:', Object.keys(req.headers));
+        console.log('\n\n\n[AUTH] Processing request:', req.method, req.path);
         
         const sessionToken = req.headers['authorization']?.replace('Bearer ', '');
         

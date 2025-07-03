@@ -6,6 +6,7 @@ import { GeneratedSetData } from '../../../types/set.types';
 import slugify from 'slugify';
 import { generateRandomId, getRandomColor } from '../../helpers/random.helper';
 import { Op } from 'sequelize';
+import LearningPathService from '../learning-path/learning-path.service';
 
 export default class SetsService {
   static async getUserSets(userId: string, page: number = 1, limit: number = 20, search?: string) {
@@ -76,15 +77,17 @@ export default class SetsService {
 
       const result = setData.toJSON();
 
-      const learningPath = await LearningPath.findOne({
-        where: { setId: setData.id, createdBy: userId }
-      });
-
-      if (learningPath) {
-        result.learningPath = learningPath.toJSON();
+      let learningPath = null;
+      try {
+        learningPath = await LearningPathService.findOrCreateLearningPath(setData.id!, userId);
+      } catch (error) {
+        console.warn('[DEBUG] Could not get/create learning path:', error);
       }
 
-      return result;
+      return {
+        ...result,
+        learningPath
+      };
     } catch (error) {
       console.error('[DEBUG] Error in SetsService.getSetBySlug:', error);
       throw error;

@@ -1,5 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { getSession } from 'next-auth/react';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from './auth-options';
 
 const createApiInstance = (): AxiosInstance => {
   const instance = axios.create({
@@ -12,20 +14,32 @@ const createApiInstance = (): AxiosInstance => {
 
   instance.interceptors.request.use(
     async (config) => {
-      console.log('[DEBUG] API Request interceptor - outgoing request');
-      console.log('[DEBUG] Request URL:', config.url);
-      console.log('[DEBUG] Request method:', config.method);
       
-      const session = await getSession();
-      console.log('[DEBUG] Session data:', {
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        userId: session?.user?.id,
-        hasAccessToken: !!(session as any)?.accessToken
-      });
+      let session;
+      
+      if (typeof window === 'undefined') {
+        try {
+          session = await getServerSession(authOptions);
+          console.log('[DEBUG] Server-side session data:', {
+            hasSession: !!session,
+            hasUser: !!session?.user,
+            userId: session?.user?.id,
+            hasAccessToken: !!(session as any)?.accessToken
+          });
+        } catch (error) {
+          console.log('[DEBUG] Failed to get server session:', error);
+        }
+      } else {
+        session = await getSession();
+        console.log('[DEBUG] Client-side session data:', {
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          userId: session?.user?.id,
+          hasAccessToken: !!(session as any)?.accessToken
+        });
+      }
       
       if (session?.user?.id) {
-        // Set Authorization header with Bearer token instead of x-user-id
         const token = (session as any).accessToken;
         if (token) {
           config.headers['Authorization'] = `Bearer ${token}`;
@@ -49,23 +63,14 @@ const createApiInstance = (): AxiosInstance => {
 
   instance.interceptors.response.use(
     (response) => {
-      console.log('[DEBUG] API Response interceptor - received response');
-      console.log('[DEBUG] Response status:', response.status);
       return response;
     },
     (error) => {
-      console.error('[DEBUG] API Response interceptor error:', error);
-      console.error('[DEBUG] Error response status:', error.response?.status);
-      console.error('[DEBUG] Error response data:', error.response?.data);
-      
       if (error.response?.status === 401) {
-        console.log('[DEBUG] Received 401 error');
-        // Only redirect on client-side (browser)
         if (typeof window !== 'undefined') {
-          console.log('[DEBUG] Redirecting to login due to 401 error');
           window.location.href = '/login';
         } else {
-          console.log('[DEBUG] Server-side 401 error - not redirecting');
+          
         }
       }
       return Promise.reject(error);

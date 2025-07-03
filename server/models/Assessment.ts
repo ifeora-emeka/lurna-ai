@@ -9,9 +9,10 @@ export class Assessment extends Model<AssessmentAttributes, AssessmentCreationAt
   declare moduleId: number;
   declare unitId: number;
   declare title: string;
-  declare summary: string;
-  declare isTimed: boolean;
+  declare description: string;
+  declare type: string;
   declare difficultyLevel: string;
+  declare timeLimit: number | null;
 
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -48,18 +49,26 @@ Assessment.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    summary: {
+    description: {
       type: DataTypes.TEXT,
       allowNull: false,
     },
-    isTimed: {
-      type: DataTypes.BOOLEAN,
+    type: {
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: false,
     },
     difficultyLevel: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'difficulty_level',
+      validate: {
+        isIn: [['easy', 'medium', 'hard']]
+      }
+    },
+    timeLimit: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: 'time_limit',
     },
   },
   {

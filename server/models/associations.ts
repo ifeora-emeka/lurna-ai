@@ -10,7 +10,6 @@ import User from './User';
 export function initializeAssociations() {
   Set.belongsTo(User, { foreignKey: 'createdBy', as: 'user' });
   Set.hasMany(Module, { foreignKey: 'setId', as: 'modules' });
-  Set.hasMany(LearningPath, { foreignKey: 'setId', as: 'learningPaths' });
   Set.hasMany(Assessment, { foreignKey: 'setId', as: 'assessments' });
   Set.hasMany(Question, { foreignKey: 'setId', as: 'questions' });
   Set.hasMany(AssessmentResult, { foreignKey: 'setId', as: 'assessmentResults' });

@@ -14,9 +14,6 @@ export const authOptions: NextAuthOptions = {
     ],
     callbacks: {
         async signIn({ user, account, profile, credentials }) {
-            console.log('[NextAuth] Sign In callback started');
-            console.log('[NextAuth] Sign In User:', user ? { id: user.id, email: user.email } : 'No user');
-            console.log('[NextAuth] Sign In Account Provider:', account?.provider);
             
             if (user && account?.provider === "google") {
                 const extendedUser = user as ExtendedUser;
@@ -36,20 +33,12 @@ export const authOptions: NextAuthOptions = {
                         }),
                     });
 
-                    if (!response.ok) {
-                        console.error("[NextAuth] Failed to store user in backend");
-                    } else {
-                        console.log('[NextAuth] User stored in backend successfully');
-                    }
                 } catch (error) {
-                    console.error("[NextAuth] Error storing user in backend:", error);
                 }
             }
-            console.log('[NextAuth] Sign In callback completed');
             return true;
         },
         async session({ session, token }) {
-            console.log('[NextAuth] Session callback', { sessionUserId: session?.user?.id, tokenSub: token.sub });
             const userSession = session as UserSession;
             if (token.sub && userSession.user) {
                 userSession.user.id = token.sub;
@@ -67,16 +56,11 @@ export const authOptions: NextAuthOptions = {
                     process.env.NEXTAUTH_SECRET
                 );
             }
-            
-            console.log('[NextAuth] Session callback completed', { 
-                userId: userSession.user?.id, 
-                hasAccessToken: !!(userSession as any).accessToken 
-            });
+
             
             return userSession;
         },
         async jwt({ token, user }) {
-            console.log('[NextAuth] JWT callback', { tokenId: token.id, userId: user?.id });
             if (user) {
                 token.id = user.id;
             }
@@ -85,10 +69,8 @@ export const authOptions: NextAuthOptions = {
         async redirect({ url, baseUrl }) {
             if (url.startsWith('/')) {
                 const resolvedUrl = `${baseUrl}${url}`;
-                console.log('[NextAuth] Resolved redirect to:', resolvedUrl);
                 return resolvedUrl;
             } else if (url.startsWith(baseUrl)) {
-                console.log('[NextAuth] Using absolute URL:', url);
                 return url;
             }
             
