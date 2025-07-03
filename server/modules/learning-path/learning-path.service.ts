@@ -92,52 +92,57 @@ export default class LearningPathService {
       }
 
       console.log('[DEBUG] Fetching learning path for setId:', setId, 'userId:', userId);
-      const learningPath = await this.findOrCreateLearningPath(setId, userId);
-      console.log('[DEBUG] Learning path result:', learningPath);
+      const learningPathData = await this.findOrCreateLearningPath(setId, userId);
+      console.log('[DEBUG] Learning path result:', learningPathData);
       
-      if (!learningPath || !learningPath.currentModuleId || !learningPath.currentUnitId) {
+      if (!learningPathData || !learningPathData.currentModuleId || !learningPathData.currentUnitId) {
         console.log('[DEBUG] Learning path needs kickstart:', { 
-          exists: !!learningPath, 
-          currentModuleId: learningPath?.currentModuleId, 
-          currentUnitId: learningPath?.currentUnitId 
+          exists: !!learningPathData, 
+          currentModuleId: learningPathData?.currentModuleId, 
+          currentUnitId: learningPathData?.currentUnitId 
         });
         const kickstartedPath = await this.kickstartPathLearningPath({ setId, userId });
-        const nextSteps = await this.returnNextPathToTake(kickstartedPath.currentUnitId!, userId);
+        const kickstartedPathData = kickstartedPath.toJSON();
+        const nextSteps = await this.returnNextPathToTake(kickstartedPathData.currentUnitId!, userId);
         
         return {
           nextSteps,
-          nextModule: nextSteps.canMoveForward ? kickstartedPath.currentModuleId : null,
-          nextUnit: nextSteps.canMoveForward ? kickstartedPath.currentUnitId : null,
-          currentUnitId: kickstartedPath.currentUnitId,
+          nextModule: nextSteps.canMoveForward ? kickstartedPathData.currentModuleId : null,
+          nextUnit: nextSteps.canMoveForward ? kickstartedPathData.currentUnitId : null,
+          currentUnitId: kickstartedPathData.currentUnitId,
           pendingAssessment: null
         };
       }
 
-      console.log('[DEBUG] Learning path is valid, getting next steps for unitId:', learningPath.currentUnitId);
-      const nextSteps = await this.returnNextPathToTake(learningPath.currentUnitId, userId);
+      console.log('[DEBUG] Learning path is valid, getting next steps for unitId:', learningPathData.currentUnitId);
+      const nextSteps = await this.returnNextPathToTake(learningPathData.currentUnitId!, userId);
       
       let nextModule = null;
-      let nextUnit = null;
-
-      if (nextSteps.canMoveForward) {
+      let nextUnit = null;      if (nextSteps.canMoveForward) {
         const nextUnitData = await UnitsService.getOrGenerateNextUnit({
           setId,
-          currentUnitID: learningPath.currentUnitId,
-          currentModuleId: learningPath.currentModuleId
+          currentUnitID: learningPathData.currentUnitId!,
+          currentModuleId: learningPathData.currentModuleId!
         });
-        
+
         if (nextUnitData.nextUnit) {
           nextUnit = nextUnitData.nextUnit.id;
           nextModule = nextUnitData.nextUnit.moduleId;
           
-          await LearningPath.update(
-            { 
-              currentUnitId: nextUnit,
-              currentModuleId: nextModule,
-              lastUsed: new Date()
-            },
-            { where: { id: learningPath.id } }
-          );
+          const learningPathInstance = await LearningPath.findOne({
+            where: { setId, createdBy: userId }
+          });
+          
+          if (learningPathInstance) {
+            await LearningPath.update(
+              { 
+                currentUnitId: nextUnit,
+                currentModuleId: nextModule,
+                lastUsed: new Date()
+              },
+              { where: { id: learningPathInstance.id } }
+            );
+          }
         }
       }
 
@@ -145,7 +150,7 @@ export default class LearningPathService {
         nextSteps,
         nextModule,
         nextUnit,
-        currentUnitId: learningPath.currentUnitId,
+        currentUnitId: learningPathData.currentUnitId,
         pendingAssessment: null
       };
     } catch (error) {

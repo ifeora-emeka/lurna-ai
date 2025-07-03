@@ -196,38 +196,68 @@ export default class AssessmentResultService {
                 }
             });
 
-            const results = answers.map((answer, index) => {
-                const question = questions.find(q => q.id === answer.questionId);
-                if (!question) {
-                    throw new Error(`Question with ID ${answer.questionId} not found`);
-                }
-
+            const results = [];
+            
+            for (const question of questions) {
+                const answer = answers.find(a => a.questionId === question.id);
+                
                 const correctOptions = question.options.filter((opt: any) => opt.isCorrect);
                 const correctAnswers = correctOptions.map((opt: any) => opt.id);
-                const userAnswers = Array.isArray(answer.selectedOptions) ? answer.selectedOptions : [answer.selectedOptions];
                 
-                const isCorrect = JSON.stringify(correctAnswers.sort()) === JSON.stringify(userAnswers.sort());
+                let isCorrect = false;
+                let userAnswers: string[] = [];
+                
+                if (answer && (answer.selectedOptions?.length > 0 || answer.textAnswer)) {
+                    if (answer.textAnswer) {
+                        userAnswers = [answer.textAnswer];
+                        isCorrect = false;
+                    } else {
+                        userAnswers = Array.isArray(answer.selectedOptions) ? answer.selectedOptions : [answer.selectedOptions];
+                        isCorrect = JSON.stringify(correctAnswers.sort()) === JSON.stringify(userAnswers.sort());
+                    }
+                } else {
+                    userAnswers = [];
+                    isCorrect = false;
+                }
 
-                return {
+                results.push({
+                    questionId: question.id,
+                    questionContent: question.content,
                     question: question.id,
                     correctAnswerText: correctOptions.map((opt: any) => opt.content).join(', ') || 'Correct answer',
                     correctOptionsIDs: correctAnswers,
                     userAnswers: userAnswers,
-                    isCorrect
-                };
-            });
+                    userAnswer: userAnswers.length > 0 ? userAnswers.join(', ') : 'No answer provided',
+                    isCorrect,
+                    isUnanswered: userAnswers.length === 0
+                });
+            }
+
+            const correctCount = results.filter(r => r.isCorrect).length;
+            const unansweredCount = results.filter(r => r.isUnanswered).length;
+            const totalQuestions = results.length;
+            const percentage = Math.round((correctCount / totalQuestions) * 100);
 
             const prompt = `
                 Based on the following assessment results, provide advice and feedback for the student:
                 
+                Total Questions: ${totalQuestions}
+                Correct Answers: ${correctCount}
+                Unanswered Questions: ${unansweredCount}
+                Score: ${percentage}%
+                
                 Questions and Results:
                 ${results.map((r, i) => `
-                Question ${i + 1}: ${r.isCorrect ? 'Correct' : 'Incorrect'}
+                Question ${i + 1}: ${r.isUnanswered ? 'Unanswered' : (r.isCorrect ? 'Correct' : 'Incorrect')}
                 Correct Answer: ${r.correctAnswerText}
-                User Answers: ${r.userAnswers.join(', ')}
+                User Answers: ${r.userAnswers.length > 0 ? r.userAnswers.join(', ') : 'No answer provided'}
                 `).join('\n')}
                 
-                Provide constructive feedback in 2-3 sentences focusing on what the student did well and areas for improvement.
+                Provide constructive feedback in 2-3 sentences focusing on:
+                1. What the student did well
+                2. Areas for improvement
+                3. Specific suggestions for studying
+                ${unansweredCount > 0 ? '4. Note about the importance of attempting all questions' : ''}
             `;
 
             const advice = await AI.generateText(prompt);
@@ -239,9 +269,14 @@ export default class AssessmentResultService {
             });
 
             return {
-                ...assessmentResult.toJSON(),
+                assessmentResult: assessmentResult.toJSON(),
                 result: results,
-                advice
+                evaluatedAnswers: results,
+                advice,
+                score: correctCount,
+                totalQuestions,
+                percentage,
+                unansweredCount
             };
         } catch (error) {
             console.error('[DEBUG] Error in AssessmentResultService.submitAssessment:', error);

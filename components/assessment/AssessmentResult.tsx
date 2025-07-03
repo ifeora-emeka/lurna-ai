@@ -2,13 +2,89 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, XCircle, ArrowRight, Trophy, Target } from 'lucide-react'
+import { CheckCircle, XCircle, ArrowRight, Trophy, Target, Award, TrendingUp } from 'lucide-react'
 import { Markdown } from '@/components/ui/markdown'
+import AssistantMessage from '@/components/AssistantMessage'
 
 type Props = {
   result: any;
   onNext: () => void;
 }
+
+const CircularProgress = ({ percentage, size = 200, strokeWidth = 12 }: { percentage: number; size?: number; strokeWidth?: number }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  const getColor = (percentage: number) => {
+    if (percentage >= 80) return 'hsl(var(--success))';
+    if (percentage >= 60) return 'hsl(var(--warning))';
+    return 'hsl(var(--destructive))';
+  };
+
+  const getGradientId = (percentage: number) => {
+    if (percentage >= 80) return 'success-gradient';
+    if (percentage >= 60) return 'warning-gradient';
+    return 'destructive-gradient';
+  };
+
+  return (
+    <div className="relative inline-flex items-center justify-center">
+      <svg
+        className="transform -rotate-90 drop-shadow-lg"
+        width={size}
+        height={size}
+      >
+        <defs>
+          <linearGradient id="success-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="hsl(var(--success))" />
+            <stop offset="100%" stopColor="hsl(var(--success))" stopOpacity="0.8" />
+          </linearGradient>
+          <linearGradient id="warning-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="hsl(var(--warning))" />
+            <stop offset="100%" stopColor="hsl(var(--warning))" stopOpacity="0.8" />
+          </linearGradient>
+          <linearGradient id="destructive-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="hsl(var(--destructive))" />
+            <stop offset="100%" stopColor="hsl(var(--destructive))" stopOpacity="0.8" />
+          </linearGradient>
+        </defs>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          className="text-muted-foreground"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={`url(#${getGradientId(percentage)})`}
+          strokeWidth={strokeWidth}
+          fill="transparent"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          className="transition-all duration-2000 ease-out"
+          style={{
+            filter: 'drop-shadow(0 0 8px rgba(0,0,0,0.1))'
+          }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-5xl font-bold text-foreground">
+            {percentage}%
+          </div>
+          <div className="text-sm font-medium text-muted-foreground mt-1">Score</div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function AssessmentResult({ result, onNext }: Props) {
   if (!result) {
@@ -33,84 +109,149 @@ export default function AssessmentResult({ result, onNext }: Props) {
     );
   }
 
-  const { score, totalQuestions, percentage, evaluatedAnswers, assessmentResult } = result;
+  const score = result.score || 0;
+  const totalQuestions = result.totalQuestions || 0;
+  const percentage = result.percentage || 0;
+  const advice = result.advice || '';
+  
+  const evaluatedAnswers = result.evaluatedAnswers || result.result || [];
+  const assessmentResultData = result.assessmentResult || result;
 
-  const getScoreColor = (percentage: number) => {
-    if (percentage >= 80) return 'text-green-600 dark:text-green-400';
-    if (percentage >= 60) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-red-600 dark:text-red-400';
+  const getPerformanceData = (percentage: number) => {
+    if (percentage >= 90) return { 
+      title: "Excellent", 
+      icon: "🎉", 
+      titleClass: "text-green-600 dark:text-green-400",
+      cardClass: "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800",
+      description: "Outstanding performance! You've mastered this topic."
+    };
+    if (percentage >= 80) return { 
+      title: "Excellent", 
+      icon: "🎯", 
+      titleClass: "text-green-600 dark:text-green-400",
+      cardClass: "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800",
+      description: "Great job! You have a strong understanding."
+    };
+    if (percentage >= 70) return { 
+      title: "Good", 
+      icon: "👍", 
+      titleClass: "text-yellow-600 dark:text-yellow-400",
+      cardClass: "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800",
+      description: "Well done! You're on the right track."
+    };
+    if (percentage >= 60) return { 
+      title: "Good", 
+      icon: "📚", 
+      titleClass: "text-yellow-600 dark:text-yellow-400",
+      cardClass: "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800",
+      description: "Good effort! Keep practicing to improve."
+    };
+    return { 
+      title: "Poor", 
+      icon: "💪", 
+      titleClass: "text-red-600 dark:text-red-400",
+      cardClass: "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800",
+      description: "Don't worry! Review the material and try again."
+    };
   };
 
-  const getScoreBadgeVariant = (percentage: number) => {
-    if (percentage >= 80) return 'default';
-    if (percentage >= 60) return 'secondary';
-    return 'destructive';
-  };
-
-  const getPerformanceMessage = (percentage: number) => {
-    if (percentage >= 90) return { icon: "🎉", message: "Excellent work!" };
-    if (percentage >= 80) return { icon: "🎯", message: "Great job!" };
-    if (percentage >= 70) return { icon: "👍", message: "Good effort!" };
-    if (percentage >= 60) return { icon: "📚", message: "Keep studying!" };
-    return { icon: "💪", message: "More practice needed!" };
-  };
-
-  const performance = getPerformanceMessage(percentage);
+  const performance = getPerformanceData(percentage);
 
   return (
-    <div className="max-w-4xl mx-auto py-8 space-y-6">
-      <Card className="shadow-lg border-border">
-        <CardHeader className="text-center space-y-6 bg-gradient-to-br from-background to-muted/30">
-          <div className="space-y-4">
-            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-              <Trophy className="w-10 h-10 text-primary" />
-            </div>
-            <CardTitle className="text-3xl font-bold text-foreground">Assessment Complete!</CardTitle>
-            <div className="space-y-3">
-              <div className={`text-5xl font-bold ${getScoreColor(percentage)}`}>
-                {score}/{totalQuestions}
+    <div className="max-w-6xl mx-auto py-8 space-y-12">
+      <div className="flex justify-center">
+        <div className="w-full max-w-4xl">
+          <AssistantMessage 
+            markdownText={advice}
+            flow="horizontal"
+          />
+        </div>
+      </div>
+
+      <div className="bg-gradient-to-br from-background/80 via-background to-background/80 py-8">
+        <div className="text-center space-y-8">
+          <div className="flex flex-col items-center space-y-6">
+            <div className="relative">
+              <CircularProgress percentage={percentage} size={240} strokeWidth={16} />
+              <div className="absolute -top-6 -right-6">
+                <div className={`w-16 h-16 rounded-full ${performance.cardClass} border-4 flex items-center justify-center shadow-lg`}>
+                  <span className="text-3xl">{performance.icon}</span>
+                </div>
               </div>
-              <Badge 
-                variant={getScoreBadgeVariant(percentage)}
-                className="text-xl px-6 py-2 font-bold"
-              >
-                {percentage}%
-              </Badge>
-              <p className="text-lg font-medium text-foreground">
-                {performance.icon} {performance.message}
+            </div>
+            
+            <div className="space-y-4">
+              <h1 className={`text-6xl font-bold ${performance.titleClass}`}>
+                {performance.title}
+              </h1>
+              <p className="text-2xl text-muted-foreground font-medium">
+                Assessment Complete
+              </p>
+              <p className="text-lg text-muted-foreground max-w-md mx-auto">
+                {performance.description}
               </p>
             </div>
           </div>
-        </CardHeader>
 
-        <CardContent className="space-y-8 p-8">
-          {assessmentResult.advice && (
-            <div className="p-6 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl">
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center">
-                💡 <span className="ml-2">Personalized Feedback</span>
-              </h4>
-              <div className="prose prose-sm max-w-none text-blue-800 dark:text-blue-200">
-                <Markdown content={assessmentResult.advice} />
-              </div>
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
+            <Card className="bg-card/50 backdrop-blur-sm border-primary/20 shadow-lg">
+              <CardContent className="p-6 text-center">
+                <div className="flex items-center justify-center w-12 h-12 bg-primary/10 rounded-full mx-auto mb-3">
+                  <Trophy className="w-6 h-6 text-primary" />
+                </div>
+                <div className="text-3xl font-bold text-primary">{score}</div>
+                <div className="text-sm text-muted-foreground font-medium">Correct Answers</div>
+              </CardContent>
+            </Card>
 
-          <div>
-            <h4 className="font-semibold text-xl mb-6 text-foreground">Question Review</h4>
-            <div className="space-y-4">
-              {evaluatedAnswers.map((answer: any, index: number) => (
+            <Card className="bg-card/50 backdrop-blur-sm border-secondary/20 shadow-lg">
+              <CardContent className="p-6 text-center">
+                <div className="flex items-center justify-center w-12 h-12 bg-secondary/10 rounded-full mx-auto mb-3">
+                  <Target className="w-6 h-6 text-secondary-foreground" />
+                </div>
+                <div className="text-3xl font-bold text-secondary-foreground">{totalQuestions}</div>
+                <div className="text-sm text-muted-foreground font-medium">Total Questions</div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card/50 backdrop-blur-sm border-accent/20 shadow-lg">
+              <CardContent className="p-6 text-center">
+                <div className="flex items-center justify-center w-12 h-12 bg-accent/10 rounded-full mx-auto mb-3">
+                  <TrendingUp className="w-6 h-6 text-accent-foreground" />
+                </div>
+                <div className="text-3xl font-bold text-accent-foreground">{percentage}%</div>
+                <div className="text-sm text-muted-foreground font-medium">Accuracy</div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+     
+
+      {evaluatedAnswers && evaluatedAnswers.length > 0 && (
+        <div>
+          <div className="space-y-4">
+            {evaluatedAnswers.map((answer: any, index: number) => {
+              const questionId = answer.questionId || answer.question || index + 1;
+              const isCorrect = answer.isCorrect || false;
+              const questionContent = answer.questionContent || answer.question || `Question ${index + 1}`;
+              const userAnswer = answer.userAnswer || answer.userAnswers || 'No answer provided';
+              const correctAnswer = answer.correctAnswer || answer.correctAnswerText || 'Not available';
+              
+              return (
                 <Card 
-                  key={answer.questionId} 
+                  key={questionId} 
                   className={`border-l-4 transition-all duration-200 hover:shadow-md ${
-                    answer.isCorrect 
-                      ? 'border-l-green-500 bg-green-50/50 dark:bg-green-950/10' 
-                      : 'border-l-red-500 bg-red-50/50 dark:bg-red-950/10'
+                    isCorrect 
+                      ? 'border-l-green-500 bg-green-50/30 dark:bg-green-950/10' 
+                      : 'border-l-red-500 bg-red-50/30 dark:bg-red-950/10'
                   }`}
                 >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <h5 className="font-semibold text-base text-foreground">Question {index + 1}</h5>
-                      {answer.isCorrect ? (
+                      {isCorrect ? (
                         <div className="flex items-center space-x-2 text-green-600 dark:text-green-400">
                           <CheckCircle className="w-5 h-5" />
                           <span className="text-sm font-medium">Correct</span>
@@ -124,42 +265,43 @@ export default function AssessmentResult({ result, onNext }: Props) {
                     </div>
                     
                     <div className="prose prose-sm max-w-none text-foreground mb-4">
-                      <Markdown content={answer.question} />
+                      <Markdown content={questionContent} />
                     </div>
                     
                     <div className="space-y-3 text-sm">
-                      <div className="p-3 bg-muted/50 rounded-lg border border-border">
+                      <div className="p-3 bg-muted/30 rounded-lg border">
                         <span className="font-semibold text-foreground">Your answer: </span>
-                        <span className={`font-medium ${answer.isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                          {Array.isArray(answer.userAnswer) ? answer.userAnswer.join(', ') : answer.userAnswer}
+                        <span className={`font-medium ${isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                          {Array.isArray(userAnswer) ? userAnswer.join(', ') : userAnswer}
                         </span>
                       </div>
                       
-                      {!answer.isCorrect && (
+                      {!isCorrect && (
                         <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
                           <span className="font-semibold text-foreground">Correct answer: </span>
-                          <span className="font-medium text-green-600 dark:text-green-400">{answer.correctAnswer}</span>
+                          <span className="font-medium text-green-600 dark:text-green-400">{correctAnswer}</span>
                         </div>
                       )}
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+              );
+            })}
           </div>
+        </div>
+      )}
 
-          <div className="text-center pt-8 border-t border-border">
-            <Button 
-              onClick={onNext}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-              size="lg"
-            >
-              Continue Learning Journey
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center pt-8">
+        <Button 
+          onClick={onNext}
+          className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground px-10 py-4 text-lg font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 rounded-2xl"
+          size="lg"
+        >
+          <Award className="w-6 h-6 mr-3" />
+          Continue Learning Journey
+          <ArrowRight className="w-6 h-6 ml-3" />
+        </Button>
+      </div>
     </div>
   )
 }

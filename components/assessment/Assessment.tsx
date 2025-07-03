@@ -1,11 +1,9 @@
 import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import { Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { Clock, ChevronLeft, ChevronRight, Check } from 'lucide-react'
 import { assessmentResultApi } from '@/lib/api/assessment-result'
 import { toast } from 'sonner'
 import { Markdown } from '@/components/ui/markdown'
@@ -24,6 +22,8 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
   const questions = assessmentData?.questions || [];
   const assessment = assessmentData?.assessment;
   const assessmentResult = assessmentData?.assessmentResult;
+
+  console.log('ASSESSMENT DATA:', assessmentData);    
 
   const handleAnswerChange = (questionId: number, answer: any) => {
     setAnswers(prev => ({
@@ -44,16 +44,15 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
     }
   };
 
-  const handleSubmit = async () => {
-    const unansweredQuestions = questions.filter((question: any) => {
-      const answer = answers[question.id];
-      return !answer || (Array.isArray(answer) && answer.length === 0) || answer === '';
-    });
+  const handleSubmit = async (forceSubmit = false) => {
+    // const unansweredQuestions = questions.filter((question: any) => {
+    //   const answer = answers[question.id];
+    //   return !answer || (Array.isArray(answer) && answer.length === 0) || answer === '';
+    // });
 
-    if (unansweredQuestions.length > 0) {
-      toast.error(`Please answer all questions before submitting. ${unansweredQuestions.length} question(s) remaining.`);
-      return;
-    }
+    // if (unansweredQuestions.length > 0 && !forceSubmit) {
+    //   return false;
+    // }
 
     const formattedAnswers = questions.map((question: any) => {
       const answer = answers[question.id];
@@ -64,6 +63,11 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
       };
     });
 
+    if (!assessmentResult?.id) {
+      toast.error('Assessment not properly initialized. Please refresh and try again.');
+      return false;
+    }
+
     setSubmitting(true);
     try {
       const result = await assessmentResultApi.submitAssessment(
@@ -72,9 +76,11 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
       );
       toast.success('Assessment submitted successfully!');
       onComplete(result.data);
+      return true;
     } catch (error) {
       console.error('Failed to submit assessment:', error);
       toast.error('Failed to submit assessment');
+      return false;
     } finally {
       setSubmitting(false);
     }
@@ -100,30 +106,42 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
       return (
         <div className="space-y-4">
           {question.options && question.options.length > 0 ? (
-            <RadioGroup 
-              value={questionAnswer || ''} 
-              onValueChange={(value) => handleAnswerChange(question.id, value)}
-              className="space-y-3"
-            >
+            <div className="space-y-3">
               {question.options.map((option: any) => {
                 const optionContent = option.content || option.text || '';
+                const isSelected = questionAnswer === option.id;
+                
                 if (!optionContent.trim()) {
                   console.warn('Empty option content detected:', option);
                   return null;
                 }
                 
                 return (
-                  <div key={option.id} className="flex items-start space-x-4 p-4 border border-border rounded-xl hover:bg-accent hover:border-accent-foreground/20 cursor-pointer transition-all duration-200 group">
-                    <RadioGroupItem value={option.id} id={`option-${option.id}`} className="mt-1 flex-shrink-0" />
-                    <Label htmlFor={`option-${option.id}`} className="flex-1 cursor-pointer group-hover:text-accent-foreground">
+                  <div 
+                    key={option.id} 
+                    className={`flex items-start space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-200 group ${
+                      isSelected 
+                        ? 'border-green-300 bg-green-50 dark:border-green-600 dark:bg-green-950/30' 
+                        : 'border-border hover:bg-accent/50 hover:border-accent-foreground/20'
+                    }`}
+                    onClick={() => handleAnswerChange(question.id, option.id)}
+                  >
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 transition-all ${
+                      isSelected 
+                        ? 'border-green-500 bg-green-500' 
+                        : 'border-muted-foreground group-hover:border-primary'
+                    }`}>
+                      {isSelected && <Check className="w-4 h-4 text-white" />}
+                    </div>
+                    <div className="flex-1 cursor-pointer">
                       <div className="prose prose-sm max-w-none text-foreground">
                         <Markdown content={optionContent} />
                       </div>
-                    </Label>
+                    </div>
                   </div>
                 );
               }).filter(Boolean)}
-            </RadioGroup>
+            </div>
           ) : (
             <div className="text-muted-foreground p-6 bg-destructive/5 border border-destructive/20 rounded-xl">
               <p className="font-medium text-destructive mb-2">⚠️ Missing Options</p>
@@ -141,31 +159,42 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
             <div className="space-y-3">
               {question.options.map((option: any) => {
                 const optionContent = option.content || option.text || '';
+                const isSelected = Array.isArray(questionAnswer) && questionAnswer.includes(option.id);
+                
                 if (!optionContent.trim()) {
                   console.warn('Empty option content detected:', option);
                   return null;
                 }
                 
                 return (
-                  <div key={option.id} className="flex items-start space-x-4 p-4 border border-border rounded-xl hover:bg-accent hover:border-accent-foreground/20 transition-all duration-200 group">
-                    <Checkbox 
-                      id={`option-${option.id}`}
-                      checked={Array.isArray(questionAnswer) && questionAnswer.includes(option.id)}
-                      onCheckedChange={(checked) => {
-                        const currentAnswers = Array.isArray(questionAnswer) ? questionAnswer : [];
-                        if (checked) {
-                          handleAnswerChange(question.id, [...currentAnswers, option.id]);
-                        } else {
-                          handleAnswerChange(question.id, currentAnswers.filter((id: string) => id !== option.id));
-                        }
-                      }}
-                      className="mt-1 flex-shrink-0"
-                    />
-                    <Label htmlFor={`option-${option.id}`} className="flex-1 cursor-pointer group-hover:text-accent-foreground">
+                  <div 
+                    key={option.id} 
+                    className={`flex items-start space-x-4 p-4 border rounded-xl cursor-pointer transition-all duration-200 group ${
+                      isSelected 
+                        ? 'border-green-300 bg-green-50 dark:border-green-600 dark:bg-green-950/30' 
+                        : 'border-border hover:bg-accent/50 hover:border-accent-foreground/20'
+                    }`}
+                    onClick={() => {
+                      const currentAnswers = Array.isArray(questionAnswer) ? questionAnswer : [];
+                      if (isSelected) {
+                        handleAnswerChange(question.id, currentAnswers.filter((id: string) => id !== option.id));
+                      } else {
+                        handleAnswerChange(question.id, [...currentAnswers, option.id]);
+                      }
+                    }}
+                  >
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-1 transition-all ${
+                      isSelected 
+                        ? 'border-green-500 bg-green-500' 
+                        : 'border-muted-foreground group-hover:border-primary'
+                    }`}>
+                      {isSelected && <Check className="w-4 h-4 text-white" />}
+                    </div>
+                    <div className="flex-1 cursor-pointer">
                       <div className="prose prose-sm max-w-none text-foreground">
                         <Markdown content={optionContent} />
                       </div>
-                    </Label>
+                    </div>
                   </div>
                 );
               }).filter(Boolean)}
@@ -358,13 +387,58 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
             </Button>
 
             {currentQuestion === questions.length - 1 ? (
-              <Button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="bg-green-600 hover:bg-green-700 text-white px-8 py-2.5 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                {submitting ? 'Submitting...' : 'Submit Assessment'}
-              </Button>
+              (() => {
+                const unansweredQuestions = questions.filter((question: any) => {
+                  const answer = answers[question.id];
+                  return !answer || (Array.isArray(answer) && answer.length === 0) || answer === '';
+                });
+                
+                const hasUnanswered = unansweredQuestions.length > 0;
+                
+                if (hasUnanswered) {
+                  return (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          disabled={submitting}
+                          className="bg-green-300 hover:bg-green-500 text-green-800 hover:text-white px-8 py-2.5 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                        >
+                          {submitting ? 'Submitting...' : 'Submit Assessment'}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Incomplete Assessment</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            You have {unansweredQuestions.length} unanswered question{unansweredQuestions.length !== 1 ? 's' : ''}. 
+                            Are you sure you want to submit your assessment? 
+                            Unanswered questions will be marked as incorrect.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Review Questions</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={() => handleSubmit(true)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Submit Anyway
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  );
+                } else {
+                  return (
+                    <Button
+                      onClick={() => handleSubmit(false)}
+                      disabled={submitting}
+                      className="bg-green-300 hover:bg-green-500 text-green-800 hover:text-white px-8 py-2.5 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                    >
+                      {submitting ? 'Submitting...' : 'Submit Assessment'}
+                    </Button>
+                  );
+                }
+              })()
             ) : (
               <Button
                 onClick={handleNext}
