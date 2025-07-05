@@ -3,10 +3,14 @@ import { AI } from '../../helpers/ai.helper';
 
 export default class AssessmentResultService {
 
-    static async getPendingAssessmentResult(userId: string, setId?: number) {
+    static async getPendingAssessmentResult(userId: string, setId?: number, assessmentId?: number) {
         try {
             if (!setId) {
                 console.warn('[WARN] getPendingAssessmentResult called without setId, this may cause incorrect assessments to be displayed');
+            }
+
+            if (!assessmentId) {
+                console.warn('[WARN] getPendingAssessmentResult called without assessmentId, this may cause incorrect assessments to be displayed');
             }
 
             const where: any = {
@@ -16,6 +20,10 @@ export default class AssessmentResultService {
 
             if (setId) {
                 where.setId = setId;
+            }
+            
+            if (assessmentId) {
+                where.assessmentId = assessmentId;
             }
 
             const pendingResult = await AssessmentResult.findOne({
@@ -29,12 +37,12 @@ export default class AssessmentResultService {
 
             const assessment = await Assessment.findOne({
                 where: {
+                    id: pendingResult.assessmentId,
                     setId: pendingResult.setId,
                     moduleId: pendingResult.moduleId,
                     unitId: pendingResult.unitId,
                     createdBy: userId
-                },
-                order: [['created_at', 'DESC']]
+                }
             });
 
             const questions = await Question.findAll({
@@ -42,7 +50,7 @@ export default class AssessmentResultService {
                     setId: pendingResult.setId,
                     moduleId: pendingResult.moduleId,
                     unitId: pendingResult.unitId,
-                    assessmentId: assessment ? assessment.id : 0
+                    assessmentId: pendingResult.assessmentId
                 }
             });
 

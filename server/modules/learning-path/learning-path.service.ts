@@ -300,7 +300,21 @@ export default class LearningPathService {
         throw new Error('Unit not found');
       }
       
-      const pendingAssessment = await AssessmentResultService.getPendingAssessmentResult(userId, unit.setId);
+      // Get existing assessment for this unit if any
+      const existingAssessment = await Assessment.findOne({
+        where: { 
+          unitId, 
+          setId: unit.setId,
+          createdBy: userId 
+        },
+        order: [['created_at', 'DESC']]
+      });
+      
+      const pendingAssessment = await AssessmentResultService.getPendingAssessmentResult(
+        userId, 
+        unit.setId, 
+        existingAssessment ? existingAssessment.id : undefined
+      );
       if (pendingAssessment) {
         return { pendingAssessment };
       }
@@ -434,9 +448,27 @@ export default class LearningPathService {
         throw new Error('Set not found');
       }
 
-      const existingPendingAssessment = await AssessmentResultService.getPendingAssessmentResult(userId, unit.setId);
-      if (existingPendingAssessment && existingPendingAssessment?.assessment_result?.unitId === unitId) {
-        return existingPendingAssessment;
+      const existingAssessment = await Assessment.findOne({
+        where: {
+          unitId,
+          setId: unit.setId,
+          createdBy: userId
+        },
+        order: [['created_at', 'DESC']]
+      });
+
+      const existingPendingAssessment = await AssessmentResultService.getPendingAssessmentResult(
+        userId, 
+        unit.setId,
+        existingAssessment ? existingAssessment.id : undefined
+      );
+      
+      if (existingPendingAssessment) {
+        const assessmentResult = existingPendingAssessment.assessment_result;
+        // Check if it's for the current unit and has valid assessment
+        if (assessmentResult && assessmentResult.unitId === unitId && assessmentResult.assessmentId) {
+          return existingPendingAssessment;
+        }
       }
 
       const prompt = generateAssessmentPrompt(
@@ -512,6 +544,7 @@ export default class LearningPathService {
         setId: unit.setId,
         moduleId: unit.moduleId,
         unitId: unit.id,
+        assessmentId: assessment.id,
         result: [],
         difficultyLevel: generatedData.assessment.difficultyLevel,
         isCompleted: false,

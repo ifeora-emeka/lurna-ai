@@ -5,6 +5,7 @@ import { useSet } from '@/context/set.context'
 import { learningPathApi } from '@/lib/api/learning-path'
 import { toast } from 'sonner'
 import AssistantMessage from '@/components/AssistantMessage'
+import LearningPathLoading from './LearningPathLoading'
 
 type Props = {
   onAssessmentStart: (assessmentData: any, nextSteps: any) => void
@@ -76,15 +77,7 @@ export default function LearningPathNext({ onAssessmentStart }: Props) {
   }
 
   if (loading || !nextSteps) {
-    return (
-      <div className="py-8 flex justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-6">
-            <div className="text-center">Loading your learning path...</div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <LearningPathLoading />;
   }
 
   return (

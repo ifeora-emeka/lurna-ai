@@ -8,6 +8,7 @@ export class AssessmentResult extends Model<AssessmentResultAttributes, Assessme
   declare setId: number;
   declare moduleId: number;
   declare unitId: number;
+  declare assessmentId: number;
   declare result: Array<{
     question: number;
     correctAnswerText: string;
@@ -50,6 +51,11 @@ AssessmentResult.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       field: 'unit_id',
+    },
+    assessmentId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'assessment_id',
     },
     result: {
       type: DataTypes.JSON,

@@ -294,8 +294,8 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <Card className="shadow-lg border-border">
+    <div className="max-w-4xl mx-auto py-8">
+      <Card className="shadow-none bg-card/50 border-border">
         <CardHeader className="space-y-6">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-semibold text-foreground">{assessment?.title}</CardTitle>
@@ -348,7 +348,6 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
             )}
           </div>
 
-          {/* Question Navigation Dots */}
           <div className="flex justify-center space-x-2 py-6">
             {questions.map((_: any, index: number) => {
               const questionId = questions[index].id;
@@ -374,7 +373,6 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
             })}
           </div>
 
-          {/* Navigation Controls */}
           <div className="flex justify-between items-center pt-6 border-t border-border">
             <Button
               variant="outline"

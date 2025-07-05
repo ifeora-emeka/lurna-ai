@@ -4,6 +4,7 @@ export interface AssessmentResultAttributes {
   setId: number;
   moduleId: number;
   unitId: number;
+  assessmentId: number;
   result: Array<{
     question: number;
     correctAnswerText: string;
@@ -24,6 +25,7 @@ export interface AssessmentResultCreationAttributes {
   setId: number;
   moduleId: number;
   unitId: number;
+  assessmentId: number;
   result: Array<{
     question: number;
     correctAnswerText: string;
@@ -41,6 +43,7 @@ export interface CreateAssessmentResultRequest {
   setId: number;
   moduleId: number;
   unitId: number;
+  assessmentId: number;
   result: Array<{
     questionId: number;
     correctAnswerText: string;
