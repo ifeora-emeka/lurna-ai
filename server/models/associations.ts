@@ -57,10 +57,12 @@ export function initializeAssociations() {
   Assessment.belongsTo(User, { foreignKey: 'createdBy', as: 'user' });
   Assessment.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
   Assessment.belongsTo(SubCategory, { foreignKey: 'subCategoryId', as: 'subCategory' });
+  Assessment.hasMany(Question, { foreignKey: 'assessmentId', as: 'questions' });
 
   Question.belongsTo(Set, { foreignKey: 'setId', as: 'setRelation' });
   Question.belongsTo(Module, { foreignKey: 'moduleId', as: 'moduleRelation' });
   Question.belongsTo(Unit, { foreignKey: 'unitId', as: 'unitRelation' });
+  Question.belongsTo(Assessment, { foreignKey: 'assessmentId', as: 'assessment' });
   Question.belongsTo(User, { foreignKey: 'createdBy', as: 'user' });
   Question.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
   Question.belongsTo(SubCategory, { foreignKey: 'subCategoryId', as: 'subCategory' });

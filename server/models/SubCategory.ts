@@ -42,6 +42,7 @@ SubCategory.init(
     iconClass: {
       type: DataTypes.STRING,
       allowNull: false,
+      field: 'icon_class',
     },
   },
   {

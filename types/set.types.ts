@@ -11,8 +11,8 @@ export interface SetAttributes {
   color: string;
   createdBy: string;
   lastUsed?: Date;
-  categoryId: number;
-  subCategoryId: number;
+  categoryId?: number;
+  subCategoryId?: number;
   createdAt?: Date;
   updatedAt?: Date;
   modules?: ModuleAttributes[];

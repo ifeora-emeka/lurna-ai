@@ -10,6 +10,7 @@ export interface QuestionAttributes {
   setId: number;
   moduleId: number;
   unitId: number;
+  assessmentId: number;
   content: string;
   type: string;
   environment: string;
@@ -28,6 +29,7 @@ export interface QuestionCreationAttributes {
   setId: number;
   moduleId: number;
   unitId: number;
+  assessmentId: number;
   content: string;
   type: string;
   environment?: string;
@@ -43,6 +45,7 @@ export interface CreateQuestionRequest {
   setId: number;
   moduleId: number;
   unitId: number;
+  assessmentId: number;
   content: string;
   type: string;
   environment?: string;

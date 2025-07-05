@@ -7,9 +7,11 @@ const { execSync } = require('child_process');
 // Path to the SQLite database
 const dbPath = path.join(__dirname, 'database', 'lurna.sqlite');
 const backupPath = path.join(__dirname, 'database', 'lurna.sqlite.bak');
+const isProd = process.env.NODE_ENV === 'production'
 
 // Function to run a command and log output
 function runCommand(command) {
+  if(isProd) return true;
   console.log(`Running: ${command}`);
   try {
     const output = execSync(command, { encoding: 'utf8' });
@@ -24,7 +26,7 @@ function runCommand(command) {
 }
 
 // Backup database if it exists
-if (fs.existsSync(dbPath)) {
+if (fs.existsSync(dbPath) && !isProd) {
   console.log('Backing up existing database...');
   fs.copyFileSync(dbPath, backupPath);
   console.log(`Backup created at ${backupPath}`);
@@ -33,7 +35,7 @@ if (fs.existsSync(dbPath)) {
 // Delete the database file
 console.log('Removing existing database...');
 try {
-  if (fs.existsSync(dbPath)) {
+  if (fs.existsSync(dbPath) && !isProd) {
     fs.unlinkSync(dbPath);
     console.log('Database removed successfully.');
   } else {

@@ -10,7 +10,15 @@ type CompiledUnitAssessment = {
     assessment: Assessment;
     questions: Question[];
     assessmentResult: AssessmentResult;
-  }
+}
+
+type PendingAssessmentResult = {
+    pendingAssessment: {
+        assessment: any | null;
+        questions: any[];
+        assessment_result: any;
+    }
+}
 
 export default class LearningPathService {
   static async findOrCreateLearningPath(setId: number, userId: string) {
@@ -58,13 +66,19 @@ export default class LearningPathService {
       console.error('[DEBUG] Error in LearningPathService.findOrCreateLearningPath:', error);
       throw error;
     }
-  }
+  };
+
+  
   static async next({ setId, userId }: { userId: string, setId: number }): Promise<{
     nextSteps: LLMNextSteps;
     nextModule: null | number;
     nextUnit: null | number;
     currentUnitId: null | number;
-    pendingAssessment: null | {assessment: Assessment, questions: Question[], result: AssessmentResult}
+    pendingAssessment: null | {
+      assessment: Assessment | null;
+      questions: any[];
+      assessment_result: any;
+    }
   }> {
     try {
       console.log('[DEBUG] LearningPathService.next called with setId:', setId, 'userId:', userId);
@@ -101,22 +115,82 @@ export default class LearningPathService {
           currentModuleId: learningPathData?.currentModuleId, 
           currentUnitId: learningPathData?.currentUnitId 
         });
-        const kickstartedPath = await this.kickstartPathLearningPath({ setId, userId });
-        const kickstartedPathData = kickstartedPath.toJSON();
-        const nextSteps = await this.returnNextPathToTake(kickstartedPathData.currentUnitId!, userId);
         
-        return {
-          nextSteps,
-          nextModule: nextSteps.canMoveForward ? kickstartedPathData.currentModuleId : null,
-          nextUnit: nextSteps.canMoveForward ? kickstartedPathData.currentUnitId : null,
-          currentUnitId: kickstartedPathData.currentUnitId,
-          pendingAssessment: null
-        };
+        try {
+          const kickstartedPath = await this.kickstartPathLearningPath({ setId, userId });
+          if (!kickstartedPath) {
+            throw new Error('Failed to kickstart learning path');
+          }
+          
+          const kickstartedPathData = kickstartedPath.toJSON();
+          const nextStepsOrPendingAssessment = await this.returnNextPathToTake(kickstartedPathData.currentUnitId!, userId);
+          
+
+          if ('pendingAssessment' in nextStepsOrPendingAssessment) {
+            return {
+              nextSteps: {
+                messageForStudent: "You have a pending assessment that needs to be completed first.",
+                difficultyLevel: null,
+                canMoveForward: false,
+                isTimed: false,
+                areasToTackle: [],
+                totalUnitAssessment: 0
+              },
+              nextModule: null,
+              nextUnit: null,
+              currentUnitId: kickstartedPathData.currentUnitId,
+              pendingAssessment: nextStepsOrPendingAssessment.pendingAssessment
+            };
+          }
+          
+          return {
+            nextSteps: nextStepsOrPendingAssessment,
+            nextModule: nextStepsOrPendingAssessment.canMoveForward ? kickstartedPathData.currentModuleId : null,
+            nextUnit: nextStepsOrPendingAssessment.canMoveForward ? kickstartedPathData.currentUnitId : null,
+            currentUnitId: kickstartedPathData.currentUnitId,
+            pendingAssessment: null
+          };
+        } catch (error) {
+          console.error('[DEBUG] Error in kickstartPathLearningPath:', error);
+          return {
+            nextSteps: {
+              messageForStudent: "There was an issue with your learning path. Please try again later.",
+              difficultyLevel: null,
+              canMoveForward: false,
+              isTimed: false,
+              areasToTackle: [],
+              totalUnitAssessment: 0
+            },
+            nextModule: null,
+            nextUnit: null,
+            currentUnitId: null,
+            pendingAssessment: null
+          };
+        }
       }
 
       console.log('[DEBUG] Learning path is valid, getting next steps for unitId:', learningPathData.currentUnitId);
-      const nextSteps = await this.returnNextPathToTake(learningPathData.currentUnitId!, userId);
+      const nextStepsOrPendingAssessment = await this.returnNextPathToTake(learningPathData.currentUnitId!, userId);
       
+
+      if ('pendingAssessment' in nextStepsOrPendingAssessment) {
+        return {
+          nextSteps: {
+            messageForStudent: "You have a pending assessment that needs to be completed first.",
+            difficultyLevel: null,
+            canMoveForward: false,
+            isTimed: false,
+            areasToTackle: [],
+            totalUnitAssessment: 0
+          },
+          nextModule: null,
+          nextUnit: null,
+          currentUnitId: learningPathData.currentUnitId,
+          pendingAssessment: nextStepsOrPendingAssessment.pendingAssessment
+        };
+      }
+      
+      const nextSteps = nextStepsOrPendingAssessment;
       let nextModule = null;
       let nextUnit = null;      if (nextSteps.canMoveForward) {
         const nextUnitData = await UnitsService.getOrGenerateNextUnit({
@@ -154,7 +228,7 @@ export default class LearningPathService {
         pendingAssessment: null
       };
     } catch (error) {
-      console.error('[DEBUG] Error in LearningPathService.next:', error);
+      console.error('[DEBUG] Error in LearningPathService.next:', error)
       throw error;
     }
   }
@@ -195,30 +269,40 @@ export default class LearningPathService {
         throw new Error('Failed to create units for the first module');
       }
 
-      const updatedPath = await LearningPath.update(
+      await LearningPath.update(
         {
           currentModuleId: firstModule.id,
           currentUnitId: firstUnit.id,
           lastUsed: new Date()
         },
         {
-          where: { id: learningPath.id },
-          returning: true
+          where: { id: learningPath.id }
         }
       );
 
-      return updatedPath[1][0];
+
+      const updatedLearningPath = await LearningPath.findByPk(learningPath.id);
+      if (!updatedLearningPath) {
+        throw new Error('Failed to retrieve updated learning path');
+      }
+      
+      return updatedLearningPath;
     } catch (error) {
       console.error('[DEBUG] Error in LearningPathService.kickstartPathLearningPath:', error);
       throw error;
     }
   }
 
-  static async returnNextPathToTake(unitId: number, userId: string): Promise<LLMNextSteps> {
+  static async returnNextPathToTake(unitId: number, userId: string): Promise<LLMNextSteps | PendingAssessmentResult> {
     try {
-      const pendingAssessment = await AssessmentResultService.getPendingAssessmentResult(userId);
+      const unit = await Unit.findByPk(unitId);
+      if (!unit) {
+        throw new Error('Unit not found');
+      }
+      
+      const pendingAssessment = await AssessmentResultService.getPendingAssessmentResult(userId, unit.setId);
       if (pendingAssessment) {
-        throw new Error('Student has pending assessment that must be completed first');
+        return { pendingAssessment };
       }
 
       const assessmentHistoryForLLM = await this.compileAllUserResultsForUnit({ unitId, userId });
@@ -232,11 +316,6 @@ export default class LearningPathService {
           areasToTackle: [],
           totalUnitAssessment: 0
         };
-      }
-
-      const unit = await Unit.findByPk(unitId);
-      if (!unit) {
-        throw new Error('Unit not found');
       }
 
       const prompt = evaluateNextStepsPrompt(unit.name, unit.description, assessmentHistoryForLLM);
@@ -287,7 +366,8 @@ export default class LearningPathService {
             where: { 
               unitId,
               setId: result.setId,
-              moduleId: result.moduleId
+              moduleId: result.moduleId,
+              assessmentId: assessment.id
             }
           });
 
@@ -344,15 +424,18 @@ export default class LearningPathService {
 
   static async generateAssessment({ unitId, userId, nextSteps }: { unitId: number, userId: string, nextSteps: LLMNextSteps }) {
     try {
-      // First check if user has any incomplete assessment for this unit
       const unit = await Unit.findByPk(unitId);
       if (!unit) {
         throw new Error('Unit not found');
       }
+      
+      const set = await Set.findByPk(unit.setId);
+      if (!set) {
+        throw new Error('Set not found');
+      }
 
       const existingPendingAssessment = await AssessmentResultService.getPendingAssessmentResult(userId, unit.setId);
-      if (existingPendingAssessment && existingPendingAssessment.result.unitId === unitId) {
-        // Return the existing incomplete assessment
+      if (existingPendingAssessment && existingPendingAssessment?.assessment_result?.unitId === unitId) {
         return existingPendingAssessment;
       }
 
@@ -398,7 +481,9 @@ export default class LearningPathService {
         setId: unit.setId,
         moduleId: unit.moduleId,
         unitId: unit.id,
-        createdBy: userId
+        createdBy: userId,
+        categoryId: set.categoryId,
+        subCategoryId: set.subCategoryId
       });
 
       const questions = await Promise.all(
@@ -414,7 +499,10 @@ export default class LearningPathService {
             setId: unit.setId,
             moduleId: unit.moduleId,
             unitId: unit.id,
+            assessmentId: assessment.id,
             createdBy: userId,
+            categoryId: set.categoryId,
+            subCategoryId: set.subCategoryId
           })
         )
       );
@@ -426,7 +514,9 @@ export default class LearningPathService {
         unitId: unit.id,
         result: [],
         difficultyLevel: generatedData.assessment.difficultyLevel,
-        isCompleted: false
+        isCompleted: false,
+        categoryId: set.categoryId,
+        subCategoryId: set.subCategoryId
       });
 
       return {

@@ -5,6 +5,10 @@ export default class AssessmentResultService {
 
     static async getPendingAssessmentResult(userId: string, setId?: number) {
         try {
+            if (!setId) {
+                console.warn('[WARN] getPendingAssessmentResult called without setId, this may cause incorrect assessments to be displayed');
+            }
+
             const where: any = {
                 createdBy: userId,
                 isCompleted: false
@@ -37,14 +41,15 @@ export default class AssessmentResultService {
                 where: {
                     setId: pendingResult.setId,
                     moduleId: pendingResult.moduleId,
-                    unitId: pendingResult.unitId
+                    unitId: pendingResult.unitId,
+                    assessmentId: assessment ? assessment.id : 0
                 }
             });
 
             return {
                 assessment: assessment ? assessment.toJSON() : null,
                 questions: questions.map(q => q.toJSON()),
-                result: pendingResult
+                assessment_result: pendingResult.toJSON()
             };
         } catch (error) {
             console.error('[DEBUG] Error in AssessmentResultService.getPendingAssessmentResult:', error);
@@ -66,11 +71,26 @@ export default class AssessmentResultService {
                 throw new Error('Assessment result not found or already completed');
             }
 
+            const assessment = await Assessment.findOne({
+                where: {
+                    setId: assessmentResult.setId,
+                    moduleId: assessmentResult.moduleId,
+                    unitId: assessmentResult.unitId,
+                    createdBy: userId
+                },
+                order: [['created_at', 'DESC']]
+            });
+
+            if (!assessment) {
+                throw new Error('Assessment not found for this assessment result');
+            }
+
             const questions = await Question.findAll({
                 where: {
                     setId: assessmentResult.setId,
                     moduleId: assessmentResult.moduleId,
-                    unitId: assessmentResult.unitId
+                    unitId: assessmentResult.unitId,
+                    assessmentId: assessment.id
                 }
             });
 
@@ -91,7 +111,6 @@ export default class AssessmentResultService {
                 let correctAnswer = '';
                 let correctOptionIds: string[] = [];
 
-                // Handle different question types
                 if (question.type === 'multiple_choice' || question.type === 'true_false') {
                     const correctOptions = question.options.filter((opt: any) => opt.isCorrect);
                     correctAnswer = correctOptions.map((opt: any) => opt.content).join(', ');
@@ -99,7 +118,6 @@ export default class AssessmentResultService {
                     
                     const userAnswers = Array.isArray(answer.selectedOptions) ? answer.selectedOptions : [answer.selectedOptions];
                     
-                    // For single-select questions, check if user selected the correct option
                     if (question.type === 'multiple_choice' || question.type === 'true_false') {
                         isCorrect = correctOptionIds.length === userAnswers.length &&
                             correctOptionIds.every(id => userAnswers.includes(id));
@@ -111,19 +129,15 @@ export default class AssessmentResultService {
                     
                     const userAnswers = Array.isArray(answer.selectedOptions) ? answer.selectedOptions : [];
                     
-                    // For multi-select, user must select all correct options and no incorrect ones
                     isCorrect = correctOptionIds.length === userAnswers.length &&
                         correctOptionIds.every(id => userAnswers.includes(id));
                 } else if (question.type === 'short_answer' || question.type === 'text') {
-                    // For text answers, we'll use a more lenient comparison
                     const correctOptions = question.options.filter((opt: any) => opt.isCorrect);
                     correctAnswer = correctOptions.length > 0 ? correctOptions[0].content : 'Sample answer provided';
                     
-                    // Simple text comparison (can be enhanced with AI evaluation later)
                     const userText = (answer.textAnswer || '').toLowerCase().trim();
                     const correctText = correctAnswer.toLowerCase().trim();
                     
-                    // Basic similarity check - this can be improved with AI evaluation
                     isCorrect = userText.length > 0 && (
                         userText === correctText ||
                         userText.includes(correctText) ||
@@ -160,13 +174,23 @@ export default class AssessmentResultService {
                 isCompleted: true
             });
 
+            const questionsWithAnswers = questions.map(q => {
+                const questionResult = evaluatedAnswers.find(r => r.question === q.id);
+                return {
+                    ...q.toJSON(),
+                    userResult: questionResult || null
+                };
+            });
+
             return {
-                assessmentResult: assessmentResult.toJSON(),
+                assessment_result: assessmentResult.toJSON(),
+                questions: questionsWithAnswers,
+                assessment: assessment.toJSON(),
+                evaluatedAnswers,
+                advice,
                 score,
                 totalQuestions,
-                percentage,
-                evaluatedAnswers,
-                advice
+                percentage
             };
         } catch (error) {
             console.error('[DEBUG] Error in AssessmentResultService.submitAssessmentAnswers:', error);
@@ -188,15 +212,40 @@ export default class AssessmentResultService {
                 throw new Error('Assessment result not found or already completed');
             }
 
+            const assessment = await Assessment.findOne({
+                where: {
+                    setId: assessmentResult.setId,
+                    moduleId: assessmentResult.moduleId,
+                    unitId: assessmentResult.unitId,
+                    createdBy: userId
+                },
+                order: [['created_at', 'DESC']]
+            });
+
+            if (!assessment) {
+                throw new Error('Assessment not found for this assessment result');
+            }
+
             const questions = await Question.findAll({
                 where: {
                     setId: assessmentResult.setId,
                     moduleId: assessmentResult.moduleId,
-                    unitId: assessmentResult.unitId
+                    unitId: assessmentResult.unitId,
+                    assessmentId: assessment.id
                 }
             });
 
-            const results = [];
+            const results: Array<{
+                questionId: number;
+                questionContent: string;
+                question: number;
+                correctAnswerText: string;
+                correctOptionsIDs: string[];
+                userAnswers: string[];
+                userAnswer: string;
+                isCorrect: boolean;
+                isUnanswered: boolean;
+            }> = [];
             
             for (const question of questions) {
                 const answer = answers.find(a => a.questionId === question.id);
@@ -260,6 +309,8 @@ export default class AssessmentResultService {
                 ${unansweredCount > 0 ? '4. Note about the importance of attempting all questions' : ''}
             `;
 
+            console.log('\n\nSUBMIT ASSESSMENT PROMPT:::', prompt)
+
             const advice = await AI.generateText(prompt);
 
             await assessmentResult.update({
@@ -268,15 +319,24 @@ export default class AssessmentResultService {
                 isCompleted: true
             });
 
+            
+            const questionsWithAnswers = questions.map(q => {
+                const questionResult = results.find(r => r.question === q.id);
+                return {
+                    ...q.toJSON(),
+                    userResult: questionResult || null
+                };
+            });
+
             return {
-                assessmentResult: assessmentResult.toJSON(),
-                result: results,
+                assessment_result: assessmentResult.toJSON(),
+                questions: questionsWithAnswers,
+                assessment: assessment.toJSON(),
                 evaluatedAnswers: results,
                 advice,
                 score: correctCount,
                 totalQuestions,
-                percentage,
-                unansweredCount
+                percentage
             };
         } catch (error) {
             console.error('[DEBUG] Error in AssessmentResultService.submitAssessment:', error);

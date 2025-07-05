@@ -87,6 +87,8 @@ const CircularProgress = ({ percentage, size = 200, strokeWidth = 12 }: { percen
 };
 
 export default function AssessmentResult({ result, onNext }: Props) {
+  console.log('ASSESSMENT RESULT:', result);
+  console.log('QUESTIONS:', result?.questions);
   if (!result) {
     return (
       <div className="py-12 flex justify-center">
@@ -103,19 +105,28 @@ export default function AssessmentResult({ result, onNext }: Props) {
                 </p>
               </div>
             </div>
-          </CardContent>
+          </CardContent> 
         </Card>
       </div>
     );
   }
 
+  // Extract core result data with fallbacks
+  const assessment_result = result.assessment_result || result.assessmentResult || {};
+  const assessmentResult = assessment_result;
+  
+  // Extract assessment data
+  const assessment = result.assessment || {};
+  
+  // Extract score and metrics with fallbacks
   const score = result.score || 0;
   const totalQuestions = result.totalQuestions || 0;
   const percentage = result.percentage || 0;
-  const advice = result.advice || '';
+  const advice = result.advice || assessment_result.advice || '';
   
-  const evaluatedAnswers = result.evaluatedAnswers || result.result || [];
-  const assessmentResultData = result.assessmentResult || result;
+  // Extract evaluated answers and questions
+  const evaluatedAnswers = result.evaluatedAnswers || result.result || assessment_result.result || [];
+  const questions = result.questions || [];
 
   const getPerformanceData = (percentage: number) => {
     if (percentage >= 90) return { 
@@ -235,9 +246,21 @@ export default function AssessmentResult({ result, onNext }: Props) {
             {evaluatedAnswers.map((answer: any, index: number) => {
               const questionId = answer.questionId || answer.question || index + 1;
               const isCorrect = answer.isCorrect || false;
-              const questionContent = answer.questionContent || answer.question || `Question ${index + 1}`;
-              const userAnswer = answer.userAnswer || answer.userAnswers || 'No answer provided';
-              const correctAnswer = answer.correctAnswer || answer.correctAnswerText || 'Not available';
+              const questionContent = answer.questionContent || '';
+              
+              // Find the full question data from questions array
+              const questionData = questions.find((q: any) => q.id === questionId || q.id === answer.question) || null;
+              const questionType = questionData?.type || 'unknown';
+              const isTextQuestion = questionType === 'short_answer' || questionType === 'text';
+              
+              // If we have question data, use its content, otherwise fallback
+              const displayedQuestionContent = questionData?.content || questionContent || `Question ${index + 1}`;
+              
+              // Extract user answers and correct answers
+              const userAnswers = answer.userAnswers || [];
+              const correctOptionIds = answer.correctOptionsIDs || [];
+              const userAnswerText = isTextQuestion && userAnswers.length > 0 ? userAnswers[0] : '';
+              const correctAnswerText = answer.correctAnswerText || 'Not available';
               
               return (
                 <Card 
@@ -265,24 +288,90 @@ export default function AssessmentResult({ result, onNext }: Props) {
                     </div>
                     
                     <div className="prose prose-sm max-w-none text-foreground mb-4">
-                      <Markdown content={questionContent} />
+                      <Markdown content={displayedQuestionContent} />
                     </div>
                     
-                    <div className="space-y-3 text-sm">
-                      <div className="p-3 bg-muted/30 rounded-lg border">
-                        <span className="font-semibold text-foreground">Your answer: </span>
-                        <span className={`font-medium ${isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                          {Array.isArray(userAnswer) ? userAnswer.join(', ') : userAnswer}
-                        </span>
-                      </div>
-                      
-                      {!isCorrect && (
-                        <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                          <span className="font-semibold text-foreground">Correct answer: </span>
-                          <span className="font-medium text-green-600 dark:text-green-400">{correctAnswer}</span>
+                    {isTextQuestion ? (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-muted/30 rounded-lg border">
+                          <div className="font-semibold text-foreground mb-2">Your answer:</div>
+                          <div className={`font-medium ${isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                            {userAnswerText || 'No answer provided'}
+                          </div>
                         </div>
-                      )}
-                    </div>
+                        
+                        {!isCorrect && (
+                          <div className="mt-4">
+                            <AssistantMessage
+                              markdownText={`**Correct answer:**\n\n${correctAnswerText}`}
+                              flow="horizontal"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {questionData?.options && questionData.options.length > 0 && (
+                          <div>
+                            <div className="font-semibold text-foreground mb-2">Your selections:</div>
+                            <div className="space-y-2">
+                              {questionData.options.map((option: any) => {
+                                const optionId = option.id || '';
+                                const isSelected = userAnswers.includes(optionId);
+                                const isCorrectOption = option.isCorrect || false;
+                                
+                                // Determine the display state for this option
+                                let displayState = 'neutral';
+                                if (isSelected && isCorrectOption) displayState = 'correct-selected';
+                                else if (isSelected && !isCorrectOption) displayState = 'incorrect-selected';
+                                else if (!isSelected && isCorrectOption) displayState = 'correct-missed';
+                                
+                                return (
+                                  <div 
+                                    key={optionId}
+                                    className={`flex items-start p-3 rounded-lg border ${
+                                      displayState === 'correct-selected' 
+                                        ? 'bg-green-50 dark:bg-green-950/20 border-green-300 dark:border-green-800' 
+                                        : displayState === 'incorrect-selected'
+                                        ? 'bg-red-50 dark:bg-red-950/20 border-red-300 dark:border-red-800'
+                                        : displayState === 'correct-missed'
+                                        ? 'bg-yellow-50 dark:bg-yellow-950/10 border-yellow-300 dark:border-yellow-800 border-dashed'
+                                        : 'bg-muted/30 border-muted-foreground/20'
+                                    }`}
+                                  >
+                                    <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 ${
+                                      displayState === 'correct-selected'
+                                        ? 'bg-green-500 text-white'
+                                        : displayState === 'incorrect-selected'
+                                        ? 'bg-red-500 text-white'
+                                        : displayState === 'correct-missed'
+                                        ? 'bg-yellow-500/20 border border-yellow-500 text-yellow-600 dark:text-yellow-400'
+                                        : 'bg-muted-foreground/20 text-muted-foreground'
+                                    }`}>
+                                      {displayState === 'correct-selected' && <CheckCircle className="w-4 h-4" />}
+                                      {displayState === 'incorrect-selected' && <XCircle className="w-4 h-4" />}
+                                      {displayState === 'correct-missed' && <CheckCircle className="w-4 h-4 opacity-70" />}
+                                    </div>
+                                    <div className="prose prose-sm max-w-none">
+                                      <Markdown content={option.content || ''} />
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {!isCorrect && (
+                          <div className="mt-6 pt-4 border-t border-border">
+                            <AssistantMessage
+                              markdownText={`**Correct answer${correctOptionIds.length > 1 ? 's' : ''}:**\n\n${correctAnswerText}`}
+                              flow="horizontal"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );

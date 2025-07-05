@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import {
     Card,
     CardContent,
@@ -26,6 +25,7 @@ import AppBody from '@/components/app-layout/AppBody';
 import SetWithPrompt from './SetWithPrompt';
 import SetWithDocument from './SetWithDocument';
 import { CreateSetResponse, SetAttributes } from '@/types/set.types';
+import { useRouter } from 'next13-progressbar';
 
 type CreateMethod = 'init' | 'prompt' | 'documents' | 'loading' | 'success';
 

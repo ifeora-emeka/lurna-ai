@@ -68,12 +68,12 @@ Set.init(
     },
     categoryId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       field: 'category_id',
     },
     subCategoryId: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       field: 'sub_category_id',
     },
   },

@@ -8,6 +8,7 @@ export class Question extends Model<QuestionAttributes, QuestionCreationAttribut
   declare setId: number;
   declare moduleId: number;
   declare unitId: number;
+  declare assessmentId: number;
   declare content: string;
   declare type: string;
   declare environment: string;
@@ -48,6 +49,11 @@ Question.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       field: 'unit_id',
+    },
+    assessmentId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'assessment_id',
     },
     content: {
       type: DataTypes.TEXT,
