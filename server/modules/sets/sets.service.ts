@@ -7,6 +7,8 @@ import slugify from 'slugify';
 import { generateRandomId, getRandomColor } from '../../helpers/random.helper';
 import { Op } from 'sequelize';
 import LearningPathService from '../learning-path/learning-path.service';
+import CategoryService from '../categories/categories.service';
+import SubCategoryService from '../subcategories/subcategories.service';
 
 export default class SetsService {
   static async getUserSets(userId: string, page: number = 1, limit: number = 20, search?: string) {
@@ -111,6 +113,12 @@ export default class SetsService {
         throw new Error(`AI failed to generate valid data: ${aiError.message}`);
       }
 
+      const categorySlug = slugify(generatedData.categorySlug);
+      const subCategorySlug = slugify(generatedData.subCategorySlug);
+      
+      const category = await CategoryService.findOrCreateBySlug(generatedData.categorySlug, generatedData.iconClass);
+      const subCategory = await SubCategoryService.findOrCreateBySlug(generatedData.subCategorySlug, category.id, generatedData.iconClass);
+
       const baseSlug = slugify(generatedData.name, {
         lower: true,
         strict: true,
@@ -128,6 +136,8 @@ export default class SetsService {
         iconClass: generatedData.iconClass,
         color: getRandomColor(),
         createdBy: userId,
+        categoryId: category.id,
+        subCategoryId: subCategory.id
       });
 
       return setData.toJSON();

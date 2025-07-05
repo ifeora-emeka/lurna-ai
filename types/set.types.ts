@@ -11,6 +11,8 @@ export interface SetAttributes {
   color: string;
   createdBy: string;
   lastUsed?: Date;
+  categoryId: number;
+  subCategoryId: number;
   createdAt?: Date;
   updatedAt?: Date;
   modules?: ModuleAttributes[];
@@ -21,7 +23,8 @@ export interface GeneratedSetData {
   description: string;
   keywords: string[];
   iconClass: string;
-  color: string;
+  categorySlug: string;
+  subCategorySlug: string;
 }
 
 export interface CreateSetRequest {

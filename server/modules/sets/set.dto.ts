@@ -9,4 +9,6 @@ export const generateSetSchema = z.object({
     description: z.string().max(500),
     keywords: z.array(z.string().min(1).max(50)).min(5).max(20),
     iconClass: z.string().min(1).max(50),
+    categorySlug: z.string().min(1).max(100),
+    subCategorySlug: z.string().min(1).max(100),
 }).strict();

@@ -13,6 +13,8 @@ export class Set extends Model<SetAttributes> implements SetAttributes {
   declare color: string;
   declare createdBy: string;
   declare lastUsed: Date;
+  declare categoryId: number;
+  declare subCategoryId: number;
 }
 
 Set.init(
@@ -63,6 +65,16 @@ Set.init(
       type: DataTypes.DATE,
       allowNull: true,
       field: 'last_used',
+    },
+    categoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'category_id',
+    },
+    subCategoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'sub_category_id',
     },
   },
   {

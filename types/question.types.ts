@@ -17,6 +17,8 @@ export interface QuestionAttributes {
   correctAnswers: string[];
   explanation: string | null;
   hint: string | null;
+  categoryId: number;
+  subCategoryId: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -33,6 +35,8 @@ export interface QuestionCreationAttributes {
   correctAnswers: string[];
   explanation?: string | null;
   hint?: string | null;
+  categoryId: number;
+  subCategoryId: number;
 }
 
 export interface CreateQuestionRequest {

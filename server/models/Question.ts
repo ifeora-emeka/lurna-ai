@@ -15,6 +15,8 @@ export class Question extends Model<QuestionAttributes, QuestionCreationAttribut
   declare correctAnswers: string[];
   declare explanation: string | null;
   declare hint: string | null;
+  declare categoryId: number;
+  declare subCategoryId: number;
 
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -77,6 +79,16 @@ Question.init(
     hint: {
       type: DataTypes.TEXT,
       allowNull: true,
+    },
+    categoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'category_id',
+    },
+    subCategoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'sub_category_id',
     },
   },
   {

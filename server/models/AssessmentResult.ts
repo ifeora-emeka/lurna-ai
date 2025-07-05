@@ -17,6 +17,8 @@ export class AssessmentResult extends Model<AssessmentResultAttributes, Assessme
   declare advice: string;
   declare difficultyLevel: string;
   declare isCompleted: boolean;
+  declare categoryId: number;
+  declare subCategoryId: number;
 
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -70,6 +72,16 @@ AssessmentResult.init(
       allowNull: false,
       defaultValue: false,
       field: 'is_completed',
+    },
+    categoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'category_id',
+    },
+    subCategoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'sub_category_id',
     },
   },
   {

@@ -13,6 +13,8 @@ export class Assessment extends Model<AssessmentAttributes, AssessmentCreationAt
   declare type: string;
   declare difficultyLevel: string;
   declare timeLimit: number | null;
+  declare categoryId: number;
+  declare subCategoryId: number;
 
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -69,6 +71,16 @@ Assessment.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       field: 'time_limit',
+    },
+    categoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'category_id',
+    },
+    subCategoryId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'sub_category_id',
     },
   },
   {

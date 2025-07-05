@@ -9,6 +9,8 @@ export interface AssessmentAttributes {
   type: string;
   difficultyLevel: string;
   timeLimit?: number | null;
+  categoryId: number;
+  subCategoryId: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -23,6 +25,8 @@ export interface AssessmentCreationAttributes {
   type: string;
   difficultyLevel: string;
   timeLimit?: number | null;
+  categoryId: number;
+  subCategoryId: number;
 }
 
 export interface CreateAssessmentRequest {

@@ -13,6 +13,8 @@ export interface AssessmentResultAttributes {
   advice: string;
   difficultyLevel: string;
   isCompleted: boolean;
+  categoryId: number;
+  subCategoryId: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -31,6 +33,8 @@ export interface AssessmentResultCreationAttributes {
   advice?: string;
   difficultyLevel: string;
   isCompleted?: boolean;
+  categoryId: number;
+  subCategoryId: number;
 }
 
 export interface CreateAssessmentResultRequest {

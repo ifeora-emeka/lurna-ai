@@ -6,6 +6,8 @@ import { LearningPath } from './LearningPath';
 import { Assessment } from './Assessment';
 import { Question } from './Question';
 import { AssessmentResult } from './AssessmentResult';
+import { Category } from './Category';
+import { SubCategory } from './SubCategory';
 import { initializeAssociations } from './associations';
 
 export { initializeAssociations };
@@ -18,5 +20,7 @@ export {
   LearningPath,
   Assessment,
   Question,
-  AssessmentResult
+  AssessmentResult,
+  Category,
+  SubCategory
 };
