@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function LearningPathLoading() {
   return (
     <div className="max-w-4xl mx-auto py-8">
-      <Card className="shadow-lg border-border overflow-hidden">
+      <div >
         <CardHeader className="border-b border-border/50 bg-muted/30">
           <div className="flex items-center justify-between">
             <Skeleton className="h-6 w-48 rounded-md animate-pulse" />
@@ -14,7 +14,6 @@ export default function LearningPathLoading() {
         
         <CardContent className="p-6">
           <div className="space-y-8">
-            {/* Path progress indicators */}
             <div className="flex items-center space-x-3 pt-2 pb-4">
               <Skeleton className="h-3 w-3 rounded-full bg-primary/40 animate-pulse" />
               <Skeleton className="h-0.5 w-12 animate-pulse" />
@@ -25,7 +24,6 @@ export default function LearningPathLoading() {
               <Skeleton className="h-3 w-3 rounded-full animate-pulse" />
             </div>
             
-            {/* Content area */}
             <div className="space-y-5">
               <div className="space-y-3 pb-4">
                 <Skeleton className="h-5 w-3/4 animate-pulse" />
@@ -61,7 +59,7 @@ export default function LearningPathLoading() {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </div>
     </div>
   );
 }

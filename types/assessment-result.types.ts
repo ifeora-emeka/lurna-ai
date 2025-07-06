@@ -9,7 +9,10 @@ export interface AssessmentResultAttributes {
     question: number;
     correctAnswerText: string;
     correctOptionsIDs: string[];
+    userAnswers: string[];
+    userSelectedOptions: string[];
     isCorrect: boolean;
+    isUnanswered: boolean;
   }>;
   advice: string;
   difficultyLevel: string;
@@ -30,7 +33,10 @@ export interface AssessmentResultCreationAttributes {
     question: number;
     correctAnswerText: string;
     correctOptionsIDs: string[];
+    userAnswers: string[];
+    userSelectedOptions: string[];
     isCorrect: boolean;
+    isUnanswered: boolean;
   }>;
   advice?: string;
   difficultyLevel: string;
@@ -48,7 +54,10 @@ export interface CreateAssessmentResultRequest {
     questionId: number;
     correctAnswerText: string;
     correctOptionsIDs: string[];
+    userAnswers: string[];
+    userSelectedOptions: string[];
     isCorrect: boolean;
+    isUnanswered: boolean;
   }>;
   advice?: string;
   difficultyLevel: string;

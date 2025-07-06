@@ -1,7 +1,6 @@
 export interface QuestionOption {
   id: string;
   content: string;
-  isCorrect: boolean;
 }
 
 export interface QuestionAttributes {
@@ -15,7 +14,6 @@ export interface QuestionAttributes {
   type: string;
   environment: string;
   options: QuestionOption[];
-  correctAnswers: string[];
   explanation: string | null;
   hint: string | null;
   categoryId: number;
@@ -34,7 +32,6 @@ export interface QuestionCreationAttributes {
   type: string;
   environment?: string;
   options: QuestionOption[];
-  correctAnswers: string[];
   explanation?: string | null;
   hint?: string | null;
   categoryId: number;
@@ -50,7 +47,6 @@ export interface CreateQuestionRequest {
   type: string;
   environment?: string;
   options: QuestionOption[];
-  correctAnswers: string[];
   explanation?: string | null;
   hint?: string | null;
 }

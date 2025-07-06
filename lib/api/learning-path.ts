@@ -27,6 +27,17 @@ export const learningPathApi = {
         unitId, 
         nextSteps 
       });
+      
+      // Normalize assessment result property for consistency
+      const data = response.data;
+      if (data?.data) {
+        if (data.data.assessmentResult && !data.data.assessment_result) {
+          data.data.assessment_result = data.data.assessmentResult;
+        } else if (data.data.assessment_result && !data.data.assessmentResult) {
+          data.data.assessmentResult = data.data.assessment_result;
+        }
+      }
+      
       return response.data;
     } catch (error) {
       console.error('[DEBUG] learningPathApi.generateAssessment error:', error);

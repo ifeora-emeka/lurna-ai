@@ -44,7 +44,8 @@ export default function LearningPathNext({ onAssessmentStart }: Props) {
     
     setLoading(true);
     try {
-      const response = await learningPathApi.generateAssessment(1, nextSteps);
+      if(!state.learningPath?.currentUnitId) return toast.error('Error, please try again');
+      const response = await learningPathApi.generateAssessment(state.learningPath?.currentUnitId, nextSteps);
       onAssessmentStart(response.data, nextSteps);
     } catch (error) {
       console.error('Failed to generate assessment:', error);
@@ -55,6 +56,7 @@ export default function LearningPathNext({ onAssessmentStart }: Props) {
   };
 
   if (pendingAssessment) {
+    
     return (
       <div className="py-8 flex justify-center">
         <center className='md:w-[500px] w-full mx-auto'>
@@ -63,12 +65,14 @@ export default function LearningPathNext({ onAssessmentStart }: Props) {
             markdownText="You have a pending assessment. Complete it to continue your learning journey."
           >
             <center>
-              <Button 
-                className="mt-4" 
-                onClick={() => onAssessmentStart(pendingAssessment, nextSteps)}
-              >
-                Continue Assessment
-              </Button>
+              <div className="flex flex-col items-center gap-4">
+                <Button 
+                  className="mt-4" 
+                  onClick={() => onAssessmentStart(pendingAssessment, nextSteps)}
+                >
+                  Continue Assessment
+                </Button>
+              </div>
             </center>
           </AssistantMessage>
         </center>
@@ -88,13 +92,26 @@ export default function LearningPathNext({ onAssessmentStart }: Props) {
           markdownText={nextSteps.messageForStudent}
         >
           <center>
-            <Button 
-              className="mt-4" 
-              onClick={handleGenerateAssessment}
-              disabled={loading}
-            >
-              {loading ? 'Generating Assessment...' : 'Start Assessment'}
-            </Button>
+            <div className="flex flex-col items-center gap-4">
+              {nextSteps.difficultyLevel && (
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  nextSteps.difficultyLevel === 'easy' 
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                    : nextSteps.difficultyLevel === 'medium'
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                }`}>
+                  {nextSteps.difficultyLevel.charAt(0).toUpperCase() + nextSteps.difficultyLevel.slice(1)} Difficulty Assessment
+                </div>
+              )}
+              <Button 
+                className="mt-4" 
+                onClick={handleGenerateAssessment}
+                disabled={loading}
+              >
+                {loading ? 'Generating Assessment...' : 'Start Assessment'}
+              </Button>
+            </div>
           </center>
         </AssistantMessage>
       </center>

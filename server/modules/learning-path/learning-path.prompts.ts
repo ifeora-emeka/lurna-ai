@@ -66,9 +66,12 @@ Generate a JSON object with these exact fields:
 }
 
 Decision criteria:
-- If average score >= 80%: canMoveForward = true
-- If average score 60-79%: canMoveForward = false, medium difficulty
-- If average score < 60%: canMoveForward = false, easy difficulty
+- If the last assessment was 'hard' difficulty AND score >= 80%: canMoveForward = true
+- If the last assessment was 'hard' difficulty AND score < 80%: canMoveForward = false, recommend hard difficulty again
+- If the last assessment was 'medium' difficulty AND score >= 80%: canMoveForward = false, recommend hard difficulty
+- If the last assessment was 'medium' difficulty AND score < 80%: canMoveForward = false, recommend medium difficulty again
+- If the last assessment was 'easy' difficulty AND score >= 80%: canMoveForward = false, recommend medium difficulty
+- If the last assessment was 'easy' difficulty AND score < 80%: canMoveForward = false, recommend easy difficulty again
 - Areas to tackle should be specific concepts they struggled with
 
 The response must be valid JSON that can be parsed with JSON.parse().`;

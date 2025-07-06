@@ -51,16 +51,41 @@ export default class LearningPathService {
       const firstModule = modules[0];
       console.log('[DEBUG] First module for learning path:', firstModule.toJSON());
 
+      const existingUnits = await Unit.findAll({
+        where: { moduleId: firstModule.id },
+        order: [['index', 'ASC']]
+      });
+
+      let firstUnit = null;
+      if (!existingUnits || existingUnits.length === 0) {
+        console.log('[DEBUG] No units found for first module, generating units');
+        const generatedUnits = await UnitsService.generateUnitsForModule(firstModule.id, userId);
+        if (generatedUnits && generatedUnits.length > 0) {
+          firstUnit = generatedUnits[0];
+        }
+      } else {
+        firstUnit = existingUnits[0];
+      }
+
       const learningPath = await LearningPath.create({
         setId,
         createdBy: userId,
         currentModuleId: firstModule.id,
-        currentUnitId: null,
+        currentUnitId: firstUnit ? firstUnit.id : null,
         lastUsed: new Date(),
         isCompleted: false
       });
 
       console.log('[DEBUG] Created new learning path:', learningPath.toJSON());
+      
+      if (firstUnit && !learningPath.currentUnitId) {
+        await learningPath.update({
+          currentUnitId: firstUnit.id
+        });
+        console.log('[DEBUG] Updated learning path with first unit ID:', firstUnit.id);
+        return (await LearningPath.findByPk(learningPath.id))?.toJSON() || learningPath.toJSON();
+      }
+      
       return learningPath.toJSON();
     } catch (error) {
       console.error('[DEBUG] Error in LearningPathService.findOrCreateLearningPath:', error);
@@ -87,6 +112,7 @@ export default class LearningPathService {
         throw new Error('setId and userId are required');
       }
       
+      console.log('\n\nGETTING PENDING ASSESSMENT RESULT FOR NEXT')
       const pendingAssessment = await AssessmentResultService.getPendingAssessmentResult(userId, setId);
       if (pendingAssessment) {
         return {
@@ -107,7 +133,6 @@ export default class LearningPathService {
 
       console.log('[DEBUG] Fetching learning path for setId:', setId, 'userId:', userId);
       const learningPathData = await this.findOrCreateLearningPath(setId, userId);
-      console.log('[DEBUG] Learning path result:', learningPathData);
       
       if (!learningPathData || !learningPathData.currentModuleId || !learningPathData.currentUnitId) {
         console.log('[DEBUG] Learning path needs kickstart:', { 
@@ -300,7 +325,6 @@ export default class LearningPathService {
         throw new Error('Unit not found');
       }
       
-      // Get existing assessment for this unit if any
       const existingAssessment = await Assessment.findOne({
         where: { 
           unitId, 
@@ -310,6 +334,7 @@ export default class LearningPathService {
         order: [['created_at', 'DESC']]
       });
       
+      console.log('\n\nGETTING PENDING ASSESSMENT RESULT FOR NEXT PATH TO TAKE')
       const pendingAssessment = await AssessmentResultService.getPendingAssessmentResult(
         userId, 
         unit.setId, 
@@ -332,8 +357,60 @@ export default class LearningPathService {
         };
       }
 
-      const prompt = evaluateNextStepsPrompt(unit.name, unit.description, assessmentHistoryForLLM);
+      // Implement the updated progression criteria manually instead of relying solely on LLM
+      const lastAssessment = assessmentHistoryForLLM[0]; // Most recent assessment
+      
+      // Safety check
+      if (!lastAssessment || !lastAssessment.assessment || !lastAssessment.assessmentResult) {
+        console.warn('[WARN] Missing last assessment data in returnNextPathToTake');
+        return {
+          messageForStudent: "Let's start with a new assessment.",
+          difficultyLevel: 'easy' as 'easy' | 'medium' | 'hard',
+          canMoveForward: false,
+          isTimed: false,
+          areasToTackle: [],
+          totalUnitAssessment: assessmentHistoryForLLM.length
+        };
+      }
+      
+      const lastDifficulty = lastAssessment.assessment.difficultyLevel;
+      
+      // Calculate the score from the assessment result
+      const lastScore = this.calculateAssessmentScore(lastAssessment.assessmentResult);
+      console.log('[DEBUG] Last assessment score:', lastScore, 'difficulty:', lastDifficulty);
+      
+      let canMoveForward = false;
+      let nextDifficultyLevel = lastDifficulty;
+      let message = '';
+      
+      // Apply new progression rules
+      if (lastDifficulty === 'hard' && lastScore >= 80) {
+        canMoveForward = true;
+        message = `Great job! You've scored ${lastScore}% on a hard assessment, which means you're ready to move to the next unit!`;
+      } else if (lastDifficulty === 'hard' && lastScore < 80) {
+        canMoveForward = false;
+        nextDifficultyLevel = 'hard';
+        message = `You scored ${lastScore}% on the hard assessment. You need at least 80% to move forward. Let's try another hard assessment to help you master the material.`;
+      } else if (lastDifficulty === 'medium' && lastScore >= 80) {
+        canMoveForward = false;
+        nextDifficultyLevel = 'hard';
+        message = `Excellent work on the medium difficulty assessment! You scored ${lastScore}%. Let's challenge you with a hard assessment before moving to the next unit.`;
+      } else if (lastDifficulty === 'medium' && lastScore < 80) {
+        canMoveForward = false;
+        nextDifficultyLevel = 'medium';
+        message = `You scored ${lastScore}% on the medium assessment. Let's try another one to improve your understanding.`;
+      } else if (lastDifficulty === 'easy' && lastScore >= 80) {
+        canMoveForward = false;
+        nextDifficultyLevel = 'medium';
+        message = `Good job on the easy assessment! You scored ${lastScore}%. Let's try a medium difficulty assessment next.`;
+      } else {
+        canMoveForward = false;
+        nextDifficultyLevel = 'easy';
+        message = `You scored ${lastScore}% on the easy assessment. Let's try another one to strengthen your fundamentals.`;
+      }
 
+      // Get areas to tackle from the LLM
+      const prompt = evaluateNextStepsPrompt(unit.name, unit.description, assessmentHistoryForLLM);
       const nextStepsSchema = z.object({
         messageForStudent: z.string(),
         difficultyLevel: z.enum(['easy', 'medium', 'hard']).nullable(),
@@ -343,12 +420,41 @@ export default class LearningPathService {
         totalUnitAssessment: z.number().optional()
       });
 
-      const result = await AI.generateStructuredData({ prompt, zodSchema: nextStepsSchema });
-      return result;
+      const llmResult = await AI.generateStructuredData({ prompt, zodSchema: nextStepsSchema });
+      
+      // Override LLM decision with our fixed progression rules
+      return {
+        messageForStudent: message,
+        difficultyLevel: nextDifficultyLevel as 'easy' | 'medium' | 'hard',
+        canMoveForward: canMoveForward,
+        isTimed: llmResult.isTimed || false,
+        areasToTackle: llmResult.areasToTackle || [],
+        totalUnitAssessment: assessmentHistoryForLLM.length
+      };
     } catch (error) {
       console.error('[DEBUG] Error in LearningPathService.returnNextPathToTake:', error);
       throw error;
     }
+  }
+
+  // Helper method to calculate assessment score percentage
+  static calculateAssessmentScore(assessmentResult: any): number {
+    if (!assessmentResult) {
+      console.warn('[WARN] calculateAssessmentScore called with null assessmentResult');
+      return 0;
+    }
+    
+    if (!assessmentResult.result || !Array.isArray(assessmentResult.result)) {
+      console.warn('[WARN] calculateAssessmentScore: assessmentResult has no valid result array', 
+        typeof assessmentResult.result, assessmentResult.result);
+      return 0;
+    }
+    
+    const correctAnswers = assessmentResult.result.filter((r: any) => r.isCorrect).length;
+    const totalQuestions = assessmentResult.result.length;
+    
+    if (totalQuestions === 0) return 0;
+    return Math.round((correctAnswers / totalQuestions) * 100);
   }
 
   static async compileAllUserResultsForUnit({ unitId, userId }: { unitId: number, userId: string }): Promise<CompiledUnitAssessment[]> {
@@ -457,15 +563,16 @@ export default class LearningPathService {
         order: [['created_at', 'DESC']]
       });
 
+      console.log('\n\nGETTING PENDING ASSESSMENT RESULT FOR ASSESSMENT GENERATION', unit.name)
       const existingPendingAssessment = await AssessmentResultService.getPendingAssessmentResult(
         userId, 
-        unit.setId,
+        unit.setId, //todo: incoming unit is wrong
         existingAssessment ? existingAssessment.id : undefined
       );
       
       if (existingPendingAssessment) {
         const assessmentResult = existingPendingAssessment.assessment_result;
-        // Check if it's for the current unit and has valid assessment
+        
         if (assessmentResult && assessmentResult.unitId === unitId && assessmentResult.assessmentId) {
           return existingPendingAssessment;
         }
@@ -493,10 +600,8 @@ export default class LearningPathService {
           environment: z.string(),
           options: z.array(z.object({
             id: z.string(),
-            content: z.string(),
-            isCorrect: z.boolean()
+            content: z.string()
           })),
-          correctAnswers: z.array(z.string()),
           explanation: z.string().nullable(),
           hint: z.string().nullable()
         }))
@@ -525,7 +630,6 @@ export default class LearningPathService {
             type: questionData.type,
             environment: questionData.environment || 'default',
             options: questionData.options,
-            correctAnswers: questionData.correctAnswers || [],
             explanation: questionData.explanation || null,
             hint: questionData.hint || null,
             setId: unit.setId,

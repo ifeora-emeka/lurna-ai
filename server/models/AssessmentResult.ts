@@ -13,7 +13,10 @@ export class AssessmentResult extends Model<AssessmentResultAttributes, Assessme
     question: number;
     correctAnswerText: string;
     correctOptionsIDs: string[];
+    userAnswers: string[];
+    userSelectedOptions: string[];
     isCorrect: boolean;
+    isUnanswered: boolean;
   }>;
   declare advice: string;
   declare difficultyLevel: string;

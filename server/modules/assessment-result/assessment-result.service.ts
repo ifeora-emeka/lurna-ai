@@ -1,10 +1,14 @@
-import { AssessmentResult, Assessment, Question } from '../../models';
+import { AssessmentResult, Assessment, Question, Set, Module, Unit } from '../../models';
 import { AI } from '../../helpers/ai.helper';
+import { assessmentEvaluationPrompt } from './assessment-result.prompts';
+import z from 'zod';
+import { AssessmentAnswer, AssessmentEvaluation } from '@/types/assessment-answer.types';
 
 export default class AssessmentResultService {
 
     static async getPendingAssessmentResult(userId: string, setId?: number, assessmentId?: number) {
         try {
+            console.log('GETTING PENDING ASSESSMENT RESULT:::', {userId, setId, assessmentId})
             if (!setId) {
                 console.warn('[WARN] getPendingAssessmentResult called without setId, this may cause incorrect assessments to be displayed');
             }
@@ -111,14 +115,17 @@ export default class AssessmentResultService {
                         correctOptionsIDs: [],
                         isCorrect: false,
                         userAnswers: answer.selectedOptions || [answer.textAnswer],
-                        explanation: (question as any)?.explanation || null
+                        userSelectedOptions: answer.selectedOptions || [],
+                        isUnanswered: !answer.selectedOptions || answer.selectedOptions.length === 0
                     };
                 }
 
                 let isCorrect = false;
                 let correctAnswer = '';
                 let correctOptionIds: string[] = [];
+                const userSelectedOptions = Array.isArray(answer.selectedOptions) ? answer.selectedOptions : [];
 
+                // This part is for backwards compatibility - we'll use the LLM for evaluation
                 if (question.type === 'multiple_choice' || question.type === 'true_false') {
                     const correctOptions = question.options.filter((opt: any) => opt.isCorrect);
                     correctAnswer = correctOptions.map((opt: any) => opt.content).join(', ');
@@ -158,8 +165,9 @@ export default class AssessmentResultService {
                     correctAnswerText: correctAnswer,
                     correctOptionsIDs: correctOptionIds,
                     userAnswers: answer.selectedOptions || [answer.textAnswer],
+                    userSelectedOptions: answer.selectedOptions || [],
                     isCorrect,
-                    explanation: (question as any).explanation || null
+                    isUnanswered: !answer.selectedOptions || answer.selectedOptions.length === 0
                 };
             });
 
@@ -206,7 +214,63 @@ export default class AssessmentResultService {
         }
     }
 
-    static async submitAssessment(assessmentResultId: number, answers: any[], userId: string) {
+    static async evaluateAssessmentWithLLM(
+        assessment: any,
+        questions: any[],
+        answers: any[],
+        set: any,
+        module: any,
+        unit: any
+    ): Promise<AssessmentEvaluation> {
+        const evaluationSchema = z.object({
+            evaluatedAnswers: z.array(z.object({
+                question: z.number(),
+                correctAnswerText: z.string(),
+                correctOptionsIDs: z.array(z.string()),
+                userAnswers: z.array(z.string()),
+                userSelectedOptions: z.array(z.string()),
+                isCorrect: z.boolean(),
+                isUnanswered: z.boolean()
+            })),
+            advice: z.string(),
+            score: z.number(),
+            totalQuestions: z.number(),
+            percentage: z.number()
+        });
+
+        // Make sure each question has its user-selected options properly matched up
+        const questionsWithUserSelections = questions.map(question => {
+            const userAnswer = answers.find(a => a.questionId === question.id) || { selectedOptions: [], textAnswer: '' };
+            return {
+                ...question,
+                userSelectedOptions: userAnswer.selectedOptions || [],
+                userTextAnswer: userAnswer.textAnswer || ''
+            };
+        });
+
+        const prompt = assessmentEvaluationPrompt(
+            assessment,
+            questionsWithUserSelections,
+            answers,
+            set,
+            module,
+            unit
+        );
+
+        try {
+            const evaluation = await AI.generateStructuredData({
+                prompt,
+                zodSchema: evaluationSchema
+            });
+            
+            return evaluation;
+        } catch (error) {
+            console.error('[DEBUG] Error in evaluateAssessmentWithLLM:', error);
+            throw error;
+        }
+    }
+
+    static async submitAssessment(assessmentResultId: number, answers: AssessmentAnswer[], userId: string) {
         try {
             const assessmentResult = await AssessmentResult.findOne({
                 where: {
@@ -225,9 +289,8 @@ export default class AssessmentResultService {
                     setId: assessmentResult.setId,
                     moduleId: assessmentResult.moduleId,
                     unitId: assessmentResult.unitId,
-                    createdBy: userId
-                },
-                order: [['created_at', 'DESC']]
+                    id: assessmentResult.assessmentId
+                }
             });
 
             if (!assessment) {
@@ -243,96 +306,39 @@ export default class AssessmentResultService {
                 }
             });
 
-            const results: Array<{
-                questionId: number;
-                questionContent: string;
-                question: number;
-                correctAnswerText: string;
-                correctOptionsIDs: string[];
-                userAnswers: string[];
-                userAnswer: string;
-                isCorrect: boolean;
-                isUnanswered: boolean;
-            }> = [];
-            
-            for (const question of questions) {
-                const answer = answers.find(a => a.questionId === question.id);
-                
-                const correctOptions = question.options.filter((opt: any) => opt.isCorrect);
-                const correctAnswers = correctOptions.map((opt: any) => opt.id);
-                
-                let isCorrect = false;
-                let userAnswers: string[] = [];
-                
-                if (answer && (answer.selectedOptions?.length > 0 || answer.textAnswer)) {
-                    if (answer.textAnswer) {
-                        userAnswers = [answer.textAnswer];
-                        isCorrect = false;
-                    } else {
-                        userAnswers = Array.isArray(answer.selectedOptions) ? answer.selectedOptions : [answer.selectedOptions];
-                        isCorrect = JSON.stringify(correctAnswers.sort()) === JSON.stringify(userAnswers.sort());
-                    }
-                } else {
-                    userAnswers = [];
-                    isCorrect = false;
-                }
+            const set = await Set.findByPk(assessmentResult.setId);
+            const module = await Module.findByPk(assessmentResult.moduleId);
+            const unit = await Unit.findByPk(assessmentResult.unitId);
 
-                results.push({
-                    questionId: question.id,
-                    questionContent: question.content,
-                    question: question.id,
-                    correctAnswerText: correctOptions.map((opt: any) => opt.content).join(', ') || 'Correct answer',
-                    correctOptionsIDs: correctAnswers,
-                    userAnswers: userAnswers,
-                    userAnswer: userAnswers.length > 0 ? userAnswers.join(', ') : 'No answer provided',
-                    isCorrect,
-                    isUnanswered: userAnswers.length === 0
-                });
+            if (!set || !module || !unit) {
+                throw new Error('Required context information not found');
             }
 
-            const correctCount = results.filter(r => r.isCorrect).length;
-            const unansweredCount = results.filter(r => r.isUnanswered).length;
-            const totalQuestions = results.length;
-            const percentage = Math.round((correctCount / totalQuestions) * 100);
-
-            const prompt = `
-                Based on the following assessment results, provide advice and feedback for the student:
-                
-                Total Questions: ${totalQuestions}
-                Correct Answers: ${correctCount}
-                Unanswered Questions: ${unansweredCount}
-                Score: ${percentage}%
-                
-                Questions and Results:
-                ${results.map((r, i) => `
-                Question ${i + 1}: ${r.isUnanswered ? 'Unanswered' : (r.isCorrect ? 'Correct' : 'Incorrect')}
-                Correct Answer: ${r.correctAnswerText}
-                User Answers: ${r.userAnswers.length > 0 ? r.userAnswers.join(', ') : 'No answer provided'}
-                `).join('\n')}
-                
-                Provide constructive feedback in 2-3 sentences focusing on:
-                1. What the student did well
-                2. Areas for improvement
-                3. Specific suggestions for studying
-                ${unansweredCount > 0 ? '4. Note about the importance of attempting all questions' : ''}
-            `;
-
-            console.log('\n\nSUBMIT ASSESSMENT PROMPT:::', prompt)
-
-            const advice = await AI.generateText(prompt);
+            const { evaluatedAnswers, advice, score, totalQuestions, percentage } = 
+                await this.evaluateAssessmentWithLLM(
+                    assessment.toJSON(),
+                    questions.map(q => q.toJSON()),
+                    answers,
+                    set.toJSON(),
+                    module.toJSON(),
+                    unit.toJSON()
+                );
 
             await assessmentResult.update({
-                result: results,
+                result: evaluatedAnswers,
                 advice,
                 isCompleted: true
             });
 
-            
+            // Enhance the questions with the user's answers for better display
             const questionsWithAnswers = questions.map(q => {
-                const questionResult = results.find(r => r.question === q.id);
+                const questionData = q.toJSON();
+                const answerResult = evaluatedAnswers.find(r => r.question === q.id);
+                
                 return {
-                    ...q.toJSON(),
-                    userResult: questionResult || null
+                    ...questionData,
+                    userResult: answerResult || null,
+                    userSelectedOptions: answerResult?.userSelectedOptions || []
                 };
             });
 
@@ -340,9 +346,9 @@ export default class AssessmentResultService {
                 assessment_result: assessmentResult.toJSON(),
                 questions: questionsWithAnswers,
                 assessment: assessment.toJSON(),
-                evaluatedAnswers: results,
+                evaluatedAnswers,
                 advice,
-                score: correctCount,
+                score,
                 totalQuestions,
                 percentage
             };

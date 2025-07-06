@@ -19,11 +19,28 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
   const [answers, setAnswers] = useState<{ [key: number]: any }>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const questions = assessmentData?.questions || [];
-  const assessment = assessmentData?.assessment;
-  const assessmentResult = assessmentData?.assessmentResult;
+  // Handle both property naming conventions
+  const normalizedData = React.useMemo(() => {
+    if (!assessmentData) return null;
+    
+    // Ensure we have both property names for consistency
+    const result = { ...assessmentData };
+    if (result.assessmentResult && !result.assessment_result) {
+      result.assessment_result = result.assessmentResult;
+    } else if (result.assessment_result && !result.assessmentResult) {
+      result.assessmentResult = result.assessment_result;
+    }
+    
+    return result;
+  }, [assessmentData]);
 
-  console.log('ASSESSMENT DATA:', assessmentData);    
+  const questions = normalizedData?.questions || [];
+  const assessment = normalizedData?.assessment;
+  const assessmentResult = normalizedData?.assessmentResult || normalizedData?.assessment_result;
+
+  console.log('ASSESSMENT DATA:', normalizedData);    
+  console.log('ASSESSMENT RESULT:', assessmentResult);
+  console.log('QUESTIONS DATA:', questions.length > 0 ? questions[0] : 'No questions');
 
   const handleAnswerChange = (questionId: number, answer: any) => {
     setAnswers(prev => ({
@@ -64,6 +81,12 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
     });
 
     if (!assessmentResult?.id) {
+      console.error('Assessment not properly initialized:', {
+        assessmentData,
+        assessmentResult: assessmentResult || 'missing',
+        assessment: assessment || 'missing',
+        questions: questions.length
+      });
       toast.error('Assessment not properly initialized. Please refresh and try again.');
       return false;
     }
@@ -299,14 +322,27 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
         <CardHeader className="space-y-6">
           <div className="flex items-center justify-between">
             <CardTitle className="text-xl font-semibold text-foreground">{assessment?.title}</CardTitle>
-            {(assessment?.timeLimit || nextSteps?.isTimed) && (
-              <div className="flex items-center text-primary bg-primary/10 px-3 py-1.5 rounded-full">
-                <Clock className="w-4 h-4 mr-2" />
-                <span className="text-sm font-medium">
-                  {assessment?.timeLimit ? `${assessment.timeLimit} min` : 'Timed Assessment'}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {assessment?.difficultyLevel && (
+                <div className={`flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
+                  assessment.difficultyLevel === 'easy' 
+                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                    : assessment.difficultyLevel === 'medium'
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                      : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                }`}>
+                  {assessment.difficultyLevel.charAt(0).toUpperCase() + assessment.difficultyLevel.slice(1)} Difficulty
+                </div>
+              )}
+              {(assessment?.timeLimit || nextSteps?.isTimed) && (
+                <div className="flex items-center text-primary bg-primary/10 px-3 py-1.5 rounded-full">
+                  <Clock className="w-4 h-4 mr-2" />
+                  <span className="text-sm font-medium">
+                    {assessment?.timeLimit ? `${assessment.timeLimit} min` : 'Timed Assessment'}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Progress Bar */}
