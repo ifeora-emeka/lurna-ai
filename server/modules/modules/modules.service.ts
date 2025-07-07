@@ -37,6 +37,10 @@ export default class ModulesService {
           prompt: enhancedPrompt,
           zodSchema: generateModulesSchema,
         });
+        
+        const validatedModules = generateModulesSchema.parse(generatedModules);
+        generatedModules = validatedModules;
+        
       } catch (error) {
         const aiError = error as Error;
         console.error('[DEBUG] AI generation error:', aiError);

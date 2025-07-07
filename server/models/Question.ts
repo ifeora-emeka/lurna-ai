@@ -61,6 +61,9 @@ Question.init(
     type: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        isIn: [['multiple_choice', 'multiple_select', 'true_false', 'short_answer', 'text', 'matching', 'fill_in_the_blank', 'completion']]
+      }
     },
     environment: {
       type: DataTypes.STRING,

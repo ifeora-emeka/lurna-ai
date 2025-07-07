@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -7,6 +7,7 @@ import { Clock, ChevronLeft, ChevronRight, Check } from 'lucide-react'
 import { assessmentResultApi } from '@/lib/api/assessment-result'
 import { toast } from 'sonner'
 import { Markdown } from '@/components/ui/markdown'
+import { useLearningPath } from '@/context/learning-path.context'
 
 type Props = {
   assessmentData: any;
@@ -15,64 +16,19 @@ type Props = {
 }
 
 export default function Assessment({ assessmentData, nextSteps, onComplete }: Props) {
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<{ [key: number]: any }>({});
-  const [submitting, setSubmitting] = useState(false);
+  const { state, dispatch, handleAnswerChange, handleNext, handlePrevious, isCurrentQuestionAnswered, getAnsweredQuestionsCount } = useLearningPath();
 
-  // Handle both property naming conventions
-  const normalizedData = React.useMemo(() => {
-    if (!assessmentData) return null;
-    
-    // Ensure we have both property names for consistency
-    const result = { ...assessmentData };
-    if (result.assessmentResult && !result.assessment_result) {
-      result.assessment_result = result.assessmentResult;
-    } else if (result.assessment_result && !result.assessmentResult) {
-      result.assessmentResult = result.assessment_result;
-    }
-    
-    return result;
-  }, [assessmentData]);
+  const questions = assessmentData?.questions || [];
+  const assessment = assessmentData?.assessment;
+  const assessmentResult = assessmentData?.assessmentResult || assessmentData?.assessment_result;
 
-  const questions = normalizedData?.questions || [];
-  const assessment = normalizedData?.assessment;
-  const assessmentResult = normalizedData?.assessmentResult || normalizedData?.assessment_result;
-
-  console.log('ASSESSMENT DATA:', normalizedData);    
+  console.log('ASSESSMENT DATA:', assessmentData);    
   console.log('ASSESSMENT RESULT:', assessmentResult);
   console.log('QUESTIONS DATA:', questions.length > 0 ? questions[0] : 'No questions');
 
-  const handleAnswerChange = (questionId: number, answer: any) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: answer
-    }));
-  };
-
-  const handleNext = () => {
-    if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(prev => prev - 1);
-    }
-  };
-
   const handleSubmit = async (forceSubmit = false) => {
-    // const unansweredQuestions = questions.filter((question: any) => {
-    //   const answer = answers[question.id];
-    //   return !answer || (Array.isArray(answer) && answer.length === 0) || answer === '';
-    // });
-
-    // if (unansweredQuestions.length > 0 && !forceSubmit) {
-    //   return false;
-    // }
-
     const formattedAnswers = questions.map((question: any) => {
-      const answer = answers[question.id];
+      const answer = state.answers[question.id];
       return {
         questionId: question.id,
         selectedOptions: Array.isArray(answer) ? answer : (answer ? [answer] : []),
@@ -91,7 +47,7 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
       return false;
     }
 
-    setSubmitting(true);
+    dispatch({ type: 'SET_SUBMITTING', payload: true });
     try {
       const result = await assessmentResultApi.submitAssessment(
         assessmentResult.id,
@@ -105,25 +61,13 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
       toast.error('Failed to submit assessment');
       return false;
     } finally {
-      setSubmitting(false);
+      dispatch({ type: 'SET_SUBMITTING', payload: false });
     }
   };
 
-  const isCurrentQuestionAnswered = () => {
-    const currentQuestionId = questions[currentQuestion]?.id;
-    const answer = answers[currentQuestionId];
-    return answer && answer !== '' && (Array.isArray(answer) ? answer.length > 0 : true);
-  };
-
-  const getAnsweredQuestionsCount = () => {
-    return questions.filter((question: any) => {
-      const answer = answers[question.id];
-      return answer && answer !== '' && (Array.isArray(answer) ? answer.length > 0 : true);
-    }).length;
-  };
-
   const renderQuestion = (question: any) => {
-    const questionAnswer = answers[question.id];
+    console.log('RENDERING QUESTION:', question.type, 'OPTIONS:', question.options);
+    const questionAnswer = state.answers[question.id];
 
     if (question.type === 'multiple_choice' || question.type === 'true_false') {
       return (
@@ -157,8 +101,8 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
                       {isSelected && <Check className="w-4 h-4 text-white" />}
                     </div>
                     <div className="flex-1 cursor-pointer">
-                      <div className="prose prose-sm max-w-none text-foreground">
-                        <Markdown content={optionContent} />
+                      <div className="text-foreground">
+                        {optionContent}
                       </div>
                     </div>
                   </div>
@@ -176,11 +120,13 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
     }
     
     else if (question.type === 'multiple_select') {
+      console.log('RENDERING MULTIPLE SELECT OPTIONS:', question.options);
       return (
         <div className="space-y-4">
           {question.options && question.options.length > 0 ? (
             <div className="space-y-3">
               {question.options.map((option: any) => {
+                console.log('RENDERING MULTIPLE SELECT OPTION:', option);
                 const optionContent = option.content || option.text || '';
                 const isSelected = Array.isArray(questionAnswer) && questionAnswer.includes(option.id);
                 
@@ -214,8 +160,8 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
                       {isSelected && <Check className="w-4 h-4 text-white" />}
                     </div>
                     <div className="flex-1 cursor-pointer">
-                      <div className="prose prose-sm max-w-none text-foreground">
-                        <Markdown content={optionContent} />
+                      <div className="text-foreground">
+                        {optionContent}
                       </div>
                     </div>
                   </div>
@@ -291,8 +237,10 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
     );
   }
 
-  const currentQuestionData = questions[currentQuestion];
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
+  const currentQuestionData = questions[state.currentQuestion];
+  const progress = ((state.currentQuestion + 1) / questions.length) * 100;
+
+  console.log('CURRENT QUESTION:', currentQuestionData);
 
   if (!currentQuestionData) {
     return (
@@ -324,14 +272,14 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
             <CardTitle className="text-xl font-semibold text-foreground">{assessment?.title}</CardTitle>
             <div className="flex items-center gap-2">
               {assessment?.difficultyLevel && (
-                <div className={`flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
+                <div className={`flex items-center px-4 py-1 rounded-full text-xs font-medium ${
                   assessment.difficultyLevel === 'easy' 
                     ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
                     : assessment.difficultyLevel === 'medium'
                       ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
                       : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
                 }`}>
-                  {assessment.difficultyLevel.charAt(0).toUpperCase() + assessment.difficultyLevel.slice(1)} Difficulty
+                  {assessment.difficultyLevel.charAt(0).toUpperCase() + assessment.difficultyLevel.slice(1)}
                 </div>
               )}
               {(assessment?.timeLimit || nextSteps?.isTimed) && (
@@ -354,7 +302,7 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
               />
             </div>
             <div className="text-sm text-muted-foreground flex justify-between items-center">
-              <span className="font-medium">Question {currentQuestion + 1} of {questions.length}</span>
+              <span className="font-medium">Question {state.currentQuestion + 1} of {questions.length}</span>
               <span className="text-primary font-medium">
                 {getAnsweredQuestionsCount()} of {questions.length} completed
               </span>
@@ -387,14 +335,14 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
           <div className="flex justify-center space-x-2 py-6">
             {questions.map((_: any, index: number) => {
               const questionId = questions[index].id;
-              const isAnswered = answers[questionId] && answers[questionId] !== '' && 
-                (Array.isArray(answers[questionId]) ? answers[questionId].length > 0 : true);
-              const isCurrent = index === currentQuestion;
+              const isAnswered = state.answers[questionId] && state.answers[questionId] !== '' && 
+                (Array.isArray(state.answers[questionId]) ? state.answers[questionId].length > 0 : true);
+              const isCurrent = index === state.currentQuestion;
               
               return (
                 <button
                   key={index}
-                  onClick={() => setCurrentQuestion(index)}
+                  onClick={() => dispatch({ type: 'SET_CURRENT_QUESTION', payload: index })}
                   className={`w-10 h-10 rounded-full text-sm font-semibold transition-all duration-200 ${
                     isCurrent 
                       ? 'bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/20' 
@@ -413,17 +361,17 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
             <Button
               variant="outline"
               onClick={handlePrevious}
-              disabled={currentQuestion === 0}
+              disabled={state.currentQuestion === 0}
               className="flex items-center px-6"
             >
               <ChevronLeft className="w-4 h-4 mr-2" />
               Previous
             </Button>
 
-            {currentQuestion === questions.length - 1 ? (
+            {state.currentQuestion === questions.length - 1 ? (
               (() => {
                 const unansweredQuestions = questions.filter((question: any) => {
-                  const answer = answers[question.id];
+                  const answer = state.answers[question.id];
                   return !answer || (Array.isArray(answer) && answer.length === 0) || answer === '';
                 });
                 
@@ -434,10 +382,10 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button
-                          disabled={submitting}
+                          disabled={state.submitting}
                           className="bg-green-300 hover:bg-green-500 text-green-800 hover:text-white px-8 py-2.5 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                         >
-                          {submitting ? 'Submitting...' : 'Submit Assessment'}
+                          {state.submitting ? 'Submitting...' : 'Submit Assessment'}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -465,10 +413,10 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
                   return (
                     <Button
                       onClick={() => handleSubmit(false)}
-                      disabled={submitting}
+                      disabled={state.submitting}
                       className="bg-green-300 hover:bg-green-500 text-green-800 hover:text-white px-8 py-2.5 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                     >
-                      {submitting ? 'Submitting...' : 'Submit Assessment'}
+                      {state.submitting ? 'Submitting...' : 'Submit Assessment'}
                     </Button>
                   );
                 }

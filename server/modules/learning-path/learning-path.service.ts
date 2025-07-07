@@ -106,19 +106,18 @@ export default class LearningPathService {
     }
   }> {
     try {
-      console.log('[DEBUG] LearningPathService.next called with setId:', setId, 'userId:', userId);
+      console.log('\n\n\n\nNEXT WAS CALLED FOR::', setId, 'userId:', userId);
       
       if (!setId || !userId) {
         throw new Error('setId and userId are required');
       }
       
-      console.log('\n\nGETTING PENDING ASSESSMENT RESULT FOR NEXT')
       const pendingAssessment = await AssessmentResultService.getPendingAssessmentResult(userId, setId);
       if (pendingAssessment) {
         return {
           nextSteps: {
             messageForStudent: "You have an incomplete assessment. Please complete it before proceeding.",
-            difficultyLevel: null,
+            difficultyLevel: 'easy',
             canMoveForward: false,
             isTimed: false,
             areasToTackle: []
@@ -131,7 +130,6 @@ export default class LearningPathService {
         };
       }
 
-      console.log('[DEBUG] Fetching learning path for setId:', setId, 'userId:', userId);
       const learningPathData = await this.findOrCreateLearningPath(setId, userId);
       
       if (!learningPathData || !learningPathData.currentModuleId || !learningPathData.currentUnitId) {
@@ -150,12 +148,13 @@ export default class LearningPathService {
           const kickstartedPathData = kickstartedPath.toJSON();
           const nextStepsOrPendingAssessment = await this.returnNextPathToTake(kickstartedPathData.currentUnitId!, userId);
           
+          console.log('NEXT STEPS TO TAKE:::::::::', nextStepsOrPendingAssessment)
 
           if ('pendingAssessment' in nextStepsOrPendingAssessment) {
             return {
               nextSteps: {
                 messageForStudent: "You have a pending assessment that needs to be completed first.",
-                difficultyLevel: null,
+                difficultyLevel: 'easy',
                 canMoveForward: false,
                 isTimed: false,
                 areasToTackle: [],
@@ -168,10 +167,11 @@ export default class LearningPathService {
             };
           }
           
+          const nextSteps = nextStepsOrPendingAssessment as LLMNextSteps;
           return {
-            nextSteps: nextStepsOrPendingAssessment,
-            nextModule: nextStepsOrPendingAssessment.canMoveForward ? kickstartedPathData.currentModuleId : null,
-            nextUnit: nextStepsOrPendingAssessment.canMoveForward ? kickstartedPathData.currentUnitId : null,
+            nextSteps,
+            nextModule: nextSteps.canMoveForward ? kickstartedPathData.currentModuleId : null,
+            nextUnit: nextSteps.canMoveForward ? kickstartedPathData.currentUnitId : null,
             currentUnitId: kickstartedPathData.currentUnitId,
             pendingAssessment: null
           };
@@ -180,7 +180,7 @@ export default class LearningPathService {
           return {
             nextSteps: {
               messageForStudent: "There was an issue with your learning path. Please try again later.",
-              difficultyLevel: null,
+              difficultyLevel: 'easy',
               canMoveForward: false,
               isTimed: false,
               areasToTackle: [],
@@ -194,15 +194,14 @@ export default class LearningPathService {
         }
       }
 
-      console.log('[DEBUG] Learning path is valid, getting next steps for unitId:', learningPathData.currentUnitId);
       const nextStepsOrPendingAssessment = await this.returnNextPathToTake(learningPathData.currentUnitId!, userId);
-      
+      console.log('NEXT STEPS TO TAKE:::', nextStepsOrPendingAssessment)
 
       if ('pendingAssessment' in nextStepsOrPendingAssessment) {
         return {
           nextSteps: {
             messageForStudent: "You have a pending assessment that needs to be completed first.",
-            difficultyLevel: null,
+            difficultyLevel: 'easy',
             canMoveForward: false,
             isTimed: false,
             areasToTackle: [],
@@ -215,9 +214,11 @@ export default class LearningPathService {
         };
       }
       
-      const nextSteps = nextStepsOrPendingAssessment;
+      const nextSteps = nextStepsOrPendingAssessment as LLMNextSteps;
       let nextModule = null;
-      let nextUnit = null;      if (nextSteps.canMoveForward) {
+      let nextUnit = null;      
+      
+      if (nextSteps.canMoveForward) {
         const nextUnitData = await UnitsService.getOrGenerateNextUnit({
           setId,
           currentUnitID: learningPathData.currentUnitId!,
@@ -334,7 +335,6 @@ export default class LearningPathService {
         order: [['created_at', 'DESC']]
       });
       
-      console.log('\n\nGETTING PENDING ASSESSMENT RESULT FOR NEXT PATH TO TAKE')
       const pendingAssessment = await AssessmentResultService.getPendingAssessmentResult(
         userId, 
         unit.setId, 
@@ -346,89 +346,46 @@ export default class LearningPathService {
 
       const assessmentHistoryForLLM = await this.compileAllUserResultsForUnit({ unitId, userId });
 
-      if (assessmentHistoryForLLM.length === 0) {
-        return {
-          messageForStudent: `Welcome to this new unit! Let's start with an assessment to understand your current knowledge level.`,
-          difficultyLevel: null,
-          canMoveForward: false,
-          isTimed: false,
-          areasToTackle: [],
-          totalUnitAssessment: 0
-        };
+      if (assessmentHistoryForLLM.length > 0) {
+        const lastAssessment = assessmentHistoryForLLM[0];
+        const correctAnswers = lastAssessment.assessmentResult.result.filter((r: any) => r.isCorrect).length;
+        const totalQuestions = lastAssessment.assessmentResult.result.length;
+        const score = Math.round((correctAnswers / totalQuestions) * 100);
+        const passed = score >= 80;
+        
+        console.log('PREVIOUS ASSESSMENT ANALYSIS::', {
+          lastAssessmentScore: score,
+          lastAssessmentDifficulty: lastAssessment.assessment.difficultyLevel,
+          passed: passed,
+          correctAnswers: correctAnswers,
+          totalQuestions: totalQuestions,
+          expectedProgression: passed && lastAssessment.assessment.difficultyLevel === 'easy' ? 'medium' : 
+                              passed && lastAssessment.assessment.difficultyLevel === 'medium' ? 'hard' :
+                              passed && lastAssessment.assessment.difficultyLevel === 'hard' ? 'next unit' :
+                              'stay at current level'
+        });
       }
 
-      // Implement the updated progression criteria manually instead of relying solely on LLM
-      const lastAssessment = assessmentHistoryForLLM[0]; // Most recent assessment
-      
-      // Safety check
-      if (!lastAssessment || !lastAssessment.assessment || !lastAssessment.assessmentResult) {
-        console.warn('[WARN] Missing last assessment data in returnNextPathToTake');
-        return {
-          messageForStudent: "Let's start with a new assessment.",
-          difficultyLevel: 'easy' as 'easy' | 'medium' | 'hard',
-          canMoveForward: false,
-          isTimed: false,
-          areasToTackle: [],
-          totalUnitAssessment: assessmentHistoryForLLM.length
-        };
-      }
-      
-      const lastDifficulty = lastAssessment.assessment.difficultyLevel;
-      
-      // Calculate the score from the assessment result
-      const lastScore = this.calculateAssessmentScore(lastAssessment.assessmentResult);
-      console.log('[DEBUG] Last assessment score:', lastScore, 'difficulty:', lastDifficulty);
-      
-      let canMoveForward = false;
-      let nextDifficultyLevel = lastDifficulty;
-      let message = '';
-      
-      // Apply new progression rules
-      if (lastDifficulty === 'hard' && lastScore >= 80) {
-        canMoveForward = true;
-        message = `Great job! You've scored ${lastScore}% on a hard assessment, which means you're ready to move to the next unit!`;
-      } else if (lastDifficulty === 'hard' && lastScore < 80) {
-        canMoveForward = false;
-        nextDifficultyLevel = 'hard';
-        message = `You scored ${lastScore}% on the hard assessment. You need at least 80% to move forward. Let's try another hard assessment to help you master the material.`;
-      } else if (lastDifficulty === 'medium' && lastScore >= 80) {
-        canMoveForward = false;
-        nextDifficultyLevel = 'hard';
-        message = `Excellent work on the medium difficulty assessment! You scored ${lastScore}%. Let's challenge you with a hard assessment before moving to the next unit.`;
-      } else if (lastDifficulty === 'medium' && lastScore < 80) {
-        canMoveForward = false;
-        nextDifficultyLevel = 'medium';
-        message = `You scored ${lastScore}% on the medium assessment. Let's try another one to improve your understanding.`;
-      } else if (lastDifficulty === 'easy' && lastScore >= 80) {
-        canMoveForward = false;
-        nextDifficultyLevel = 'medium';
-        message = `Good job on the easy assessment! You scored ${lastScore}%. Let's try a medium difficulty assessment next.`;
-      } else {
-        canMoveForward = false;
-        nextDifficultyLevel = 'easy';
-        message = `You scored ${lastScore}% on the easy assessment. Let's try another one to strengthen your fundamentals.`;
-      }
-
-      // Get areas to tackle from the LLM
       const prompt = evaluateNextStepsPrompt(unit.name, unit.description, assessmentHistoryForLLM);
       const nextStepsSchema = z.object({
         messageForStudent: z.string(),
-        difficultyLevel: z.enum(['easy', 'medium', 'hard']).nullable(),
+        difficultyLevel: z.enum(['easy', 'medium', 'hard']),
         canMoveForward: z.boolean(),
         isTimed: z.boolean(),
         areasToTackle: z.array(z.string()),
         totalUnitAssessment: z.number().optional()
       });
 
-      const llmResult = await AI.generateStructuredData({ prompt, zodSchema: nextStepsSchema });
+      const LLMDecisionOnNextSteps = await AI.generateStructuredData({ prompt, zodSchema: nextStepsSchema });
+
+      const validatedDecision = nextStepsSchema.parse(LLMDecisionOnNextSteps);
       
-      // Override LLM decision with our fixed progression rules
       return {
-        messageForStudent: message,
-        difficultyLevel: nextDifficultyLevel as 'easy' | 'medium' | 'hard',
-        canMoveForward: canMoveForward,
-        isTimed: llmResult.isTimed || false,
-        areasToTackle: llmResult.areasToTackle || [],
+        messageForStudent: validatedDecision.messageForStudent,
+        difficultyLevel: validatedDecision.difficultyLevel,
+        canMoveForward: validatedDecision.canMoveForward,
+        isTimed: validatedDecision.isTimed,
+        areasToTackle: validatedDecision.areasToTackle || [],
         totalUnitAssessment: assessmentHistoryForLLM.length
       };
     } catch (error) {
@@ -437,7 +394,6 @@ export default class LearningPathService {
     }
   }
 
-  // Helper method to calculate assessment score percentage
   static calculateAssessmentScore(assessmentResult: any): number {
     if (!assessmentResult) {
       console.warn('[WARN] calculateAssessmentScore called with null assessmentResult');
@@ -511,7 +467,7 @@ export default class LearningPathService {
       if (!unitAssessments || unitAssessments.length === 0) {
         return {
           messageForStudent: "Welcome! Let's start with your first assessment to understand your current knowledge level.",
-          difficultyLevel: null,
+          difficultyLevel: 'easy',
           canMoveForward: false,
           isTimed: false,
           areasToTackle: []
@@ -527,7 +483,7 @@ export default class LearningPathService {
 
       const nextStepsSchema = z.object({
         messageForStudent: z.string(),
-        difficultyLevel: z.enum(['easy', 'medium', 'hard']).nullable(),
+        difficultyLevel: z.enum(['easy', 'medium', 'hard']),
         canMoveForward: z.boolean(),
         isTimed: z.boolean(),
         areasToTackle: z.array(z.string()),
@@ -535,137 +491,16 @@ export default class LearningPathService {
       });
 
       const result = await AI.generateStructuredData({ prompt, zodSchema: nextStepsSchema });
-      return result;
+      
+      const validatedResult = nextStepsSchema.parse(result);
+      return validatedResult;
     } catch (error) {
       console.error('[DEBUG] Error in LearningPathService.evaluatePreviousUnitAssessment:', error);
       throw error;
     }
   }
 
-  static async generateAssessment({ unitId, userId, nextSteps }: { unitId: number, userId: string, nextSteps: LLMNextSteps }) {
-    try {
-      const unit = await Unit.findByPk(unitId);
-      if (!unit) {
-        throw new Error('Unit not found');
-      }
-      
-      const set = await Set.findByPk(unit.setId);
-      if (!set) {
-        throw new Error('Set not found');
-      }
-
-      const existingAssessment = await Assessment.findOne({
-        where: {
-          unitId,
-          setId: unit.setId,
-          createdBy: userId
-        },
-        order: [['created_at', 'DESC']]
-      });
-
-      console.log('\n\nGETTING PENDING ASSESSMENT RESULT FOR ASSESSMENT GENERATION', unit.name)
-      const existingPendingAssessment = await AssessmentResultService.getPendingAssessmentResult(
-        userId, 
-        unit.setId, //todo: incoming unit is wrong
-        existingAssessment ? existingAssessment.id : undefined
-      );
-      
-      if (existingPendingAssessment) {
-        const assessmentResult = existingPendingAssessment.assessment_result;
-        
-        if (assessmentResult && assessmentResult.unitId === unitId && assessmentResult.assessmentId) {
-          return existingPendingAssessment;
-        }
-      }
-
-      const prompt = generateAssessmentPrompt(
-        unit.name,
-        unit.description,
-        nextSteps.difficultyLevel || 'medium',
-        nextSteps.areasToTackle,
-        nextSteps.isTimed
-      );
-
-      const assessmentSchema = z.object({
-        assessment: z.object({
-          title: z.string(),
-          description: z.string(),
-          type: z.string(),
-          timeLimit: z.number().nullable(),
-          difficultyLevel: z.enum(['easy', 'medium', 'hard'])
-        }),
-        questions: z.array(z.object({
-          content: z.string(),
-          type: z.enum(['multiple_choice', 'multiple_select', 'true_false', 'short_answer']),
-          environment: z.string(),
-          options: z.array(z.object({
-            id: z.string(),
-            content: z.string()
-          })),
-          explanation: z.string().nullable(),
-          hint: z.string().nullable()
-        }))
-      });
-
-      const generatedData = await AI.generateStructuredData({ prompt, zodSchema: assessmentSchema });
-
-      const assessment = await Assessment.create({
-        title: generatedData.assessment.title,
-        description: generatedData.assessment.description,
-        type: 'quiz',
-        timeLimit: generatedData.assessment.timeLimit,
-        difficultyLevel: generatedData.assessment.difficultyLevel,
-        setId: unit.setId,
-        moduleId: unit.moduleId,
-        unitId: unit.id,
-        createdBy: userId,
-        categoryId: set.categoryId,
-        subCategoryId: set.subCategoryId
-      });
-
-      const questions = await Promise.all(
-        generatedData.questions.map((questionData: any) => 
-          Question.create({
-            content: questionData.content,
-            type: questionData.type,
-            environment: questionData.environment || 'default',
-            options: questionData.options,
-            explanation: questionData.explanation || null,
-            hint: questionData.hint || null,
-            setId: unit.setId,
-            moduleId: unit.moduleId,
-            unitId: unit.id,
-            assessmentId: assessment.id,
-            createdBy: userId,
-            categoryId: set.categoryId,
-            subCategoryId: set.subCategoryId
-          })
-        )
-      );
-
-      const assessmentResult = await AssessmentResult.create({
-        createdBy: userId,
-        setId: unit.setId,
-        moduleId: unit.moduleId,
-        unitId: unit.id,
-        assessmentId: assessment.id,
-        result: [],
-        difficultyLevel: generatedData.assessment.difficultyLevel,
-        isCompleted: false,
-        categoryId: set.categoryId,
-        subCategoryId: set.subCategoryId
-      });
-
-      return {
-        assessment: assessment.toJSON(),
-        questions: questions.map(q => q.toJSON()),
-        assessmentResult: assessmentResult.toJSON()
-      };
-    } catch (error) {
-      console.error('[DEBUG] Error in LearningPathService.generateAssessment:', error);
-      throw error;
-    }
-  }  
+  
 
   
 }

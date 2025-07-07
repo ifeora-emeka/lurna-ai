@@ -289,17 +289,6 @@ export default function AssessmentResult({ result, onNext }: Props) {
           <div className="flex flex-col items-center space-y-6">
             <div className="relative">
               <CircularProgress percentage={percentage} size={240} strokeWidth={16} />
-              <div className="absolute -top-2 -right-2 transform translate-x-1/4 -translate-y-1/4">
-                <div className={`px-3 py-1 rounded-full text-sm font-bold shadow-lg ${
-                  difficultyLevel === 'easy' 
-                    ? 'bg-green-100 text-green-700 border border-green-300 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700' 
-                    : difficultyLevel === 'medium'
-                      ? 'bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-700'
-                      : 'bg-red-100 text-red-700 border border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700'
-                }`}>
-                  {difficultyLevel.charAt(0).toUpperCase() + difficultyLevel.slice(1)}
-                </div>
-              </div>
             </div>
 
             <div className="space-y-4">
@@ -310,15 +299,6 @@ export default function AssessmentResult({ result, onNext }: Props) {
                 <p className="text-2xl text-muted-foreground font-medium">
                   Assessment Complete
                 </p>
-                <div className={`px-4 py-1.5 rounded-full text-sm font-bold shadow-md ${
-                  difficultyLevel === 'easy' 
-                    ? 'bg-green-100 text-green-700 border-2 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' 
-                    : difficultyLevel === 'medium'
-                      ? 'bg-amber-100 text-amber-700 border-2 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800'
-                      : 'bg-red-100 text-red-700 border-2 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800'
-                }`}>
-                  {difficultyLevel.charAt(0).toUpperCase() + difficultyLevel.slice(1)} Difficulty
-                </div>
               </div>
               <p className="text-lg text-muted-foreground max-w-md mx-auto">
                 {performance.description}

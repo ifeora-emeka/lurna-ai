@@ -7,6 +7,7 @@ import { modulesRouter } from './server/modules/modules/modules.route';
 import { unitsRouter } from './server/modules/units/units.route';
 import { learningPathRouter } from './server/modules/learning-path/learning-path.route';
 import { assessmentResultRouter } from './server/modules/assessment-result/assessment-result.route';
+import { assessmentRouter } from './server/modules/assessments/assessments.route';
 import { sequelize } from './server/config/database';
 import { initializeAssociations } from './server/models';
 import dotenv from 'dotenv';
@@ -35,6 +36,7 @@ app.use('/api/modules', modulesRouter);
 app.use('/api/units', unitsRouter);
 app.use('/api/learning-path', learningPathRouter);
 app.use('/api/assessment-results', assessmentResultRouter);
+app.use('/api/assessments', assessmentRouter);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Server is running' });

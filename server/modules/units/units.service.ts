@@ -50,6 +50,10 @@ export default class UnitsService {
           prompt: enhancedPrompt,
           zodSchema: generateUnitsSchema,
         });
+        
+        const validatedUnits = generateUnitsSchema.parse(generatedUnits);
+        generatedUnits = validatedUnits;
+        
       } catch (error) {
         const aiError = error as Error;
         console.error('[DEBUG] AI generation error:', aiError);

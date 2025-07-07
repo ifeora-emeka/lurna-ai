@@ -17,6 +17,7 @@ export default function SpaceDetailsPage() {
     const [search, setSearch] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
     const loadMoreRef = useRef<HTMLDivElement>(null);
+    const badgeCut = 5;
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -159,14 +160,14 @@ export default function SpaceDetailsPage() {
                                             {set.description}
                                         </CardDescription>
                                         <div className="flex flex-wrap gap-1">
-                                            {set.keywords?.slice(0, 3).map((keyword, index) => (
+                                            {set.keywords?.slice(0, badgeCut).map((keyword, index) => (
                                                 <Badge key={index} variant="secondary" className="text-xs">
                                                     {keyword}
                                                 </Badge>
                                             ))}
-                                            {set.keywords?.length > 3 && (
+                                            {set.keywords?.length > badgeCut && (
                                                 <Badge variant="outline" className="text-xs">
-                                                    +{set.keywords.length - 3}
+                                                    +{set.keywords.length - badgeCut} more
                                                 </Badge>
                                             )}
                                         </div>

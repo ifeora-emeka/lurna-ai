@@ -107,6 +107,9 @@ export default class SetsService {
           zodSchema: generateSetSchema,
         });
         
+        const validatedData = generateSetSchema.parse(generatedData);
+        generatedData = validatedData;
+        
       } catch (error) {
         const aiError = error as Error;
         console.error('[DEBUG] AI processing error:', aiError);

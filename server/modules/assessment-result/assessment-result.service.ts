@@ -8,7 +8,6 @@ export default class AssessmentResultService {
 
     static async getPendingAssessmentResult(userId: string, setId?: number, assessmentId?: number) {
         try {
-            console.log('GETTING PENDING ASSESSMENT RESULT:::', {userId, setId, assessmentId})
             if (!setId) {
                 console.warn('[WARN] getPendingAssessmentResult called without setId, this may cause incorrect assessments to be displayed');
             }
@@ -263,7 +262,9 @@ export default class AssessmentResultService {
                 zodSchema: evaluationSchema
             });
             
-            return evaluation;
+            const validatedEvaluation = evaluationSchema.parse(evaluation);
+            return validatedEvaluation;
+            
         } catch (error) {
             console.error('[DEBUG] Error in evaluateAssessmentWithLLM:', error);
             throw error;

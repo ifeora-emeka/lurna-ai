@@ -57,9 +57,11 @@ export interface CreateQuestionResponse {
 }
 
 export type QuestionType = 
-  | 'multiple-choice'
-  | 'multiple-response'
-  | 'true-false'
+  | 'multiple_choice'
+  | 'multiple_select'
+  | 'true_false'
+  | 'short_answer'
+  | 'text'
   | 'matching'
-  | 'fill-in-the-blank'
+  | 'fill_in_the_blank'
   | 'completion';

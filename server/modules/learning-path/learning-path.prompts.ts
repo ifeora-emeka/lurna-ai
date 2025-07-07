@@ -13,7 +13,7 @@ Create a welcome message for a student starting this unit:
 Generate a JSON object with these exact fields:
 {
   "messageForStudent": "Welcome message introducing the unit and what they'll learn",
-  "difficultyLevel": null,
+  "difficultyLevel": "easy",
   "canMoveForward": false,
   "isTimed": false,
   "areasToTackle": [],
@@ -26,53 +26,125 @@ The response must be valid JSON that can be parsed with JSON.parse().`;
   const assessmentSummary = assessmentHistory.map(item => {
     const correctAnswers = item.assessmentResult.result.filter((r: any) => r.isCorrect).length;
     const totalQuestions = item.assessmentResult.result.length;
-    const score = (correctAnswers / totalQuestions) * 100;
+    const score = Math.round((correctAnswers / totalQuestions) * 100);
     
     return {
       assessmentTitle: item.assessment.title,
-      score: Math.round(score),
+      score: score,
       correctAnswers,
       totalQuestions,
       difficultyLevel: item.assessment.difficultyLevel,
+      passed: score >= 80,
+      questions: item.questions.map((q: any) => ({
+        id: q.id,
+        content: q.content,
+        type: q.type,
+        options: q.options
+      })),
+      evaluatedResults: item.assessmentResult.result.map((r: any) => ({
+        questionId: r.question,
+        isCorrect: r.isCorrect,
+        isUnanswered: r.isUnanswered,
+        correctAnswerText: r.correctAnswerText,
+        userAnswers: r.userAnswers,
+        userSelectedOptions: r.userSelectedOptions
+      })),
       weakAreas: item.assessmentResult.result
         .filter((r: any) => !r.isCorrect)
         .map((r: any) => r.correctAnswerText)
     };
   }).slice(-3);
 
-  return `Analyze student's assessment history and determine next learning steps for unit: "${unitName}"
+  return `You are an AI learning advisor responsible for making progression decisions based on student performance. Analyze the assessment history and determine the next steps.
 
-Assessment History:
+**LEARNING UNIT DETAILS:**
+- Unit Name: "${unitName}"
+- Unit Description: ${unitDescription}
+
+**STUDENT'S ASSESSMENT HISTORY (Most Recent First):**
 ${JSON.stringify(assessmentSummary, null, 2)}
 
-Unit Description: ${unitDescription}
+**CRITICAL PROGRESSION RULES - FOLLOW EXACTLY:**
 
-Based on the student's performance, determine:
-1. If they can move forward to the next unit
-2. What difficulty level for next assessment
-3. Specific areas they need to work on
-4. Encouraging message for the student
+**SCORING CRITERIA:**
+- PASSING SCORE: 80% or higher (≥80%)
+- FAILING SCORE: Below 80% (<80%)
+
+**MANDATORY PROGRESSION LOGIC:**
+You MUST follow this exact progression logic based on the MOST RECENT assessment:
+
+**MOST RECENT ASSESSMENT ANALYSIS:**
+- Last Assessment Score: ${assessmentSummary[0]?.score}%
+- Last Assessment Difficulty: ${assessmentSummary[0]?.difficultyLevel}
+- Last Assessment Passed: ${assessmentSummary[0]?.passed ? 'YES' : 'NO'}
+
+**DECISION MATRIX - FOLLOW EXACTLY:**
+
+1. **If MOST RECENT assessment was EASY and PASSED (≥80%):**
+   - difficultyLevel: "medium"
+   - canMoveForward: false
+   - Message: Congratulate and explain moving to medium difficulty
+
+2. **If MOST RECENT assessment was EASY and FAILED (<80%):**
+   - difficultyLevel: "easy" 
+   - canMoveForward: false
+   - Message: Encourage and explain staying at easy level
+
+3. **If MOST RECENT assessment was MEDIUM and PASSED (≥80%):**
+   - difficultyLevel: "hard"
+   - canMoveForward: false
+   - Message: Congratulate and explain moving to hard difficulty
+
+4. **If MOST RECENT assessment was MEDIUM and FAILED (<80%):**
+   - difficultyLevel: "medium"
+   - canMoveForward: false
+   - Message: Encourage and explain staying at medium level
+
+5. **If MOST RECENT assessment was HARD and PASSED (≥80%):**
+   - difficultyLevel: "hard"
+   - canMoveForward: true
+   - Message: Celebrate mastery and explain advancing to next unit
+
+6. **If MOST RECENT assessment was HARD and FAILED (<80%):**
+   - difficultyLevel: "hard"
+   - canMoveForward: false
+   - Message: Encourage and explain staying at hard level
+
+**MESSAGE REQUIREMENTS:**
+- Acknowledge their specific score percentage
+- Explain what happens next based on their performance
+- Be encouraging regardless of performance
+- Mention the difficulty level they'll face next
+- Keep it concise but motivational
+
+**AREAS TO TACKLE:**
+- Only include areas where the student got questions wrong
+- Be specific based on the incorrect answers from the most recent assessment
+- If they passed with 100%, leave this array empty or include advanced topics
+
+**TIMING DECISIONS:**
+- Use isTimed: false for easy difficulty (reduce anxiety)
+- Use isTimed: true for medium and hard difficulty (simulate real conditions)
+
+**VALIDATION CHECK:**
+Before responding, verify:
+1. You have correctly identified the most recent assessment score and difficulty
+2. You are following the exact progression logic based on pass/fail and difficulty
+3. Your message mentions their specific score percentage
+4. Your difficulty level follows the progression rules
+5. canMoveForward is only true if they passed a hard assessment
 
 IMPORTANT: Your response must be VALID JSON ONLY - no explanations, markdown, or other text.
 
 Generate a JSON object with these exact fields:
 {
-  "messageForStudent": "Personalized message based on performance (2-3 sentences)",
-  "difficultyLevel": "easy" | "medium" | "hard" | null,
+  "messageForStudent": "Your personalized message acknowledging their [SCORE]% performance and explaining the next difficulty level",
+  "difficultyLevel": "easy" | "medium" | "hard",
   "canMoveForward": true | false,
   "isTimed": true | false,
-  "areasToTackle": ["area1", "area2"],
+  "areasToTackle": ["specific area 1", "specific area 2"],
   "totalUnitAssessment": ${assessmentHistory.length}
 }
-
-Decision criteria:
-- If the last assessment was 'hard' difficulty AND score >= 80%: canMoveForward = true
-- If the last assessment was 'hard' difficulty AND score < 80%: canMoveForward = false, recommend hard difficulty again
-- If the last assessment was 'medium' difficulty AND score >= 80%: canMoveForward = false, recommend hard difficulty
-- If the last assessment was 'medium' difficulty AND score < 80%: canMoveForward = false, recommend medium difficulty again
-- If the last assessment was 'easy' difficulty AND score >= 80%: canMoveForward = false, recommend medium difficulty
-- If the last assessment was 'easy' difficulty AND score < 80%: canMoveForward = false, recommend easy difficulty again
-- Areas to tackle should be specific concepts they struggled with
 
 The response must be valid JSON that can be parsed with JSON.parse().`;
 };
@@ -82,11 +154,9 @@ export const generateAssessmentPrompt = (unitName: string, unitDescription: stri
     `Focus particularly on these areas where the student needs improvement: ${areasToTackle.join(', ')}` :
     `Cover the core concepts of this unit comprehensively`;
 
-  // Determine question count based on environment
   const isDevelopment = process.env.NODE_ENV === 'development';
   const questionCount = isDevelopment ? 5 : (difficultyLevel === 'easy' ? '15-18' : difficultyLevel === 'medium' ? '20-25' : '25-30');
 
-  // Define question type distribution based on difficulty
   const getQuestionTypeGuidance = (difficulty: string) => {
     switch (difficulty) {
       case 'easy':
@@ -94,31 +164,31 @@ export const generateAssessmentPrompt = (unitName: string, unitDescription: stri
 QUESTION TYPE DISTRIBUTION FOR EASY LEVEL:
 - 60% multiple_choice questions (focus on recognition and understanding)
 - 40% true_false questions (simple concept verification)
-- 0% short_answer questions
+- 0% short_answer or text questions
 - Questions should test basic recall, recognition, and fundamental understanding
 - Use simple, clear language with straightforward concepts
 - Avoid complex scenarios or multi-step reasoning`;
       case 'medium':
         return `
 QUESTION TYPE DISTRIBUTION FOR MEDIUM LEVEL:
-- 40% multiple_choice questions (understanding and basic application)
+- 30% multiple_choice questions (understanding and basic application)
 - 20% multiple_select questions (select all that apply - testing comprehensive understanding)
-- 20% true_false questions (concept verification with nuance)
-- 20% short_answer questions (brief explanations, 1-2 sentence responses)
+- 30% true_false questions (concept verification with nuance)
+- 20% short_answer or text questions (brief explanations, 1-2 sentence responses)
 - Questions should test understanding, application, and basic analysis
 - Include some scenarios and practical applications
 - Require students to apply concepts in familiar contexts`;
       case 'hard':
         return `
 QUESTION TYPE DISTRIBUTION FOR HARD LEVEL:
-- 20% multiple_choice questions (complex application scenarios, edge cases)
-- 15% multiple_select questions (complex multi-concept questions)
+- 15% multiple_choice questions (complex application scenarios, edge cases)
+- 10% multiple_select questions (complex multi-concept questions)
 - 10% true_false questions (nuanced concepts, advanced principles)
-- 55% short_answer questions (detailed explanations, analysis, synthesis, examples)
+- 65% short_answer or text questions (detailed explanations, analysis, synthesis, examples)
 - Questions should test deep understanding, complex application, evaluation, and synthesis
 - Include challenging scenarios, edge cases, and real-world applications
 - Require students to explain reasoning, provide examples, compare/contrast, or solve problems
-- Short answer questions should expect 2-4 sentence responses with detailed reasoning`;
+- Short answer and text questions should expect 2-4 sentence responses with detailed reasoning`;
       default:
         return `
 QUESTION TYPE DISTRIBUTION:
@@ -256,7 +326,7 @@ Generate a JSON object with this exact structure:
   "questions": [
     {
       "content": "Question text in markdown format",
-      "type": "multiple_choice" | "multiple_select" | "true_false" | "short_answer",
+      "type": "multiple_choice" | "multiple_select" | "true_false" | "short_answer" | "text",
       "environment": "default",
       "options": [
         {"id": "a", "content": "Option A in markdown format", "isCorrect": false},
