@@ -38,7 +38,6 @@ export default class LearningPathService {
         return existingPath.toJSON();
       }
 
-      console.log('[DEBUG] No existing path found, creating new one');
       const modules = await Module.findAll({
         where: { setId },
         order: [['index', 'ASC']]

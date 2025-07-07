@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
@@ -8,6 +8,10 @@ import { assessmentResultApi } from '@/lib/api/assessment-result'
 import { toast } from 'sonner'
 import { Markdown } from '@/components/ui/markdown'
 import { useLearningPath } from '@/context/learning-path.context'
+import AssessmentTimer from './AssessmentTimer'
+import AssessmentLoading from './AssessmentLoading'
+import AssessmentEnded from './AssessmentEnded'
+import SectionPlaceholder from '@/components/placeholders/SectionPlaceholder'
 
 type Props = {
   assessmentData: any;
@@ -17,14 +21,78 @@ type Props = {
 
 export default function Assessment({ assessmentData, nextSteps, onComplete }: Props) {
   const { state, dispatch, handleAnswerChange, handleNext, handlePrevious, isCurrentQuestionAnswered, getAnsweredQuestionsCount } = useLearningPath();
+  const [isInitializing, setIsInitializing] = useState(true);
+  const [initializationError, setInitializationError] = useState<string | null>(null);
+  const [timeStarted, setTimeStarted] = useState<Date | null>(null);
+  const [timeExpired, setTimeExpired] = useState(false);
 
   const questions = assessmentData?.questions || [];
   const assessment = assessmentData?.assessment;
   const assessmentResult = assessmentData?.assessmentResult || assessmentData?.assessment_result;
 
+  const initializeAssessment = async () => {
+    if (!assessmentResult?.id) {
+      setIsInitializing(false);
+      return;
+    }
+
+    try {
+      setInitializationError(null);
+      setIsInitializing(true);
+      
+      if (assessmentResult.timeStarted) {
+        setTimeStarted(new Date(assessmentResult.timeStarted));
+        setIsInitializing(false);
+      } else {
+        const response = await assessmentResultApi.updateTimeStarted(assessmentResult.id);
+        setTimeStarted(new Date(response.data.timeStarted));
+        setIsInitializing(false);
+      }
+    } catch (error) {
+      console.error('Failed to initialize assessment timer:', error);
+      setInitializationError('Failed to initialize assessment timer. Please try again.');
+      setIsInitializing(false);
+    }
+  };
+
+  useEffect(() => {
+    initializeAssessment();
+  }, [assessmentResult?.id, assessmentResult?.timeStarted]);
+
+  const handleTimeUp = async () => {
+    toast.warning('Time is up! Your assessment will be submitted automatically.');
+    setTimeExpired(true);
+    await handleSubmit(true);
+  };
+
   console.log('ASSESSMENT DATA:', assessmentData);    
   console.log('ASSESSMENT RESULT:', assessmentResult);
   console.log('QUESTIONS DATA:', questions.length > 0 ? questions[0] : 'No questions');
+
+  if (isInitializing) {
+    return <AssessmentLoading />;
+  }
+
+  if (initializationError) {
+    return (
+      <SectionPlaceholder
+        type="error"
+        header="Assessment Initialization Failed"
+        paragraph={initializationError}
+        CTABtnText="Retry"
+        onCTAClick={initializeAssessment}
+      />
+    );
+  }
+
+  if (timeExpired) {
+    return (
+      <AssessmentEnded
+        onViewResults={() => onComplete(null)}
+        isSubmitting={state.submitting}
+      />
+    );
+  }
 
   const handleSubmit = async (forceSubmit = false) => {
     const formattedAnswers = questions.map((question: any) => {
@@ -102,7 +170,7 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
                     </div>
                     <div className="flex-1 cursor-pointer">
                       <div className="text-foreground">
-                        {optionContent}
+                        <Markdown content={optionContent} />
                       </div>
                     </div>
                   </div>
@@ -161,7 +229,7 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
                     </div>
                     <div className="flex-1 cursor-pointer">
                       <div className="text-foreground">
-                        {optionContent}
+                        <Markdown content={optionContent} />
                       </div>
                     </div>
                   </div>
@@ -187,6 +255,7 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
             placeholder="Enter your answer here..."
             className="min-h-[140px] resize-none"
             rows={6}
+            maxLength={1000}
           />
           <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg border border-border">
             💡 <strong>Tip:</strong> Provide a clear and concise answer. Your response will be evaluated for accuracy and understanding.
@@ -240,8 +309,6 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
   const currentQuestionData = questions[state.currentQuestion];
   const progress = ((state.currentQuestion + 1) / questions.length) * 100;
 
-  console.log('CURRENT QUESTION:', currentQuestionData);
-
   if (!currentQuestionData) {
     return (
       <div className="py-12 flex justify-center">
@@ -282,18 +349,14 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
                   {assessment.difficultyLevel.charAt(0).toUpperCase() + assessment.difficultyLevel.slice(1)}
                 </div>
               )}
-              {(assessment?.timeLimit || nextSteps?.isTimed) && (
-                <div className="flex items-center text-primary bg-primary/10 px-3 py-1.5 rounded-full">
-                  <Clock className="w-4 h-4 mr-2" />
-                  <span className="text-sm font-medium">
-                    {assessment?.timeLimit ? `${assessment.timeLimit} min` : 'Timed Assessment'}
-                  </span>
-                </div>
-              )}
+              <AssessmentTimer 
+                timeLimit={assessment?.timeLimit}
+                timeStarted={timeStarted}
+                onTimeUp={handleTimeUp}
+              />
             </div>
           </div>
           
-          {/* Progress Bar */}
           <div className="space-y-2">
             <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
               <div 

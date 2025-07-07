@@ -400,7 +400,7 @@ export default function AssessmentResult({ result, onNext }: Props) {
                         <div className="p-4 bg-muted/30 rounded-lg border">
                           <div className="font-semibold text-foreground mb-2">Your answer:</div>
                           <div className={`font-medium ${isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                            {userAnswerText || 'No answer provided'}
+                            <Markdown content={userAnswerText || 'No answer provided'} /> 
                           </div>
                         </div>
 
@@ -415,17 +415,12 @@ export default function AssessmentResult({ result, onNext }: Props) {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {/* Always render options section for non-text questions */}
                         <div>
                           <div className="font-semibold text-foreground mb-2">All options:</div>
                           <div className="space-y-2">
-                            {/* Check if we have options from questionData */}
                             {questionData?.options && Array.isArray(questionData.options) && questionData.options.length > 0 ? (
-                              // Map through options from questionData
                               questionData.options.map((option: any) => {
-                                // Safely extract option ID with fallback
                                 const optionId = option.id || option._id || '';
-                                // Handle various formats of userSelectedOptions
                                 const isSelected = Array.isArray(userSelectedOptions) 
                                   ? userSelectedOptions.includes(optionId) 
                                   : (typeof userSelectedOptions === 'string' && userSelectedOptions === optionId);
@@ -433,7 +428,6 @@ export default function AssessmentResult({ result, onNext }: Props) {
                                   ? correctOptionIds.includes(optionId)
                                   : (typeof correctOptionIds === 'string' && correctOptionIds === optionId);
 
-                                // Determine the display state for this option
                                 let displayState = 'neutral';
                                 if (isSelected && isCorrectOption) displayState = 'correct-selected';
                                 else if (isSelected && !isCorrectOption) displayState = 'incorrect-selected';
@@ -470,7 +464,6 @@ export default function AssessmentResult({ result, onNext }: Props) {
                                 );
                               })
                             ) : (
-                              // Fallback if we don't have options in questionData
                               <div className="p-3 rounded-lg border bg-muted/30 border-muted-foreground/20">
                                 <p className="text-muted-foreground">Options data not available</p>
                               </div>

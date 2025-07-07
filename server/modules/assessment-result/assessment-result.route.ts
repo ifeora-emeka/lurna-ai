@@ -6,6 +6,7 @@ import { submitAssessmentAnswersSchema } from './assessment-result.dto';
 
 const router = Router();
 
+router.put('/update-time-started', authMiddleware, assessmentResultController.updateTimeStarted);
 router.post('/submit', authMiddleware, validateRequestBody(submitAssessmentAnswersSchema), assessmentResultController.submitAnswers);
 
 export { router as assessmentResultRouter };

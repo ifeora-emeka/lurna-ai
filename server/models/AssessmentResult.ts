@@ -21,6 +21,7 @@ export class AssessmentResult extends Model<AssessmentResultAttributes, Assessme
   declare advice: string;
   declare difficultyLevel: string;
   declare isCompleted: boolean;
+  declare timeStarted?: Date | null;
   declare categoryId: number;
   declare subCategoryId: number;
 
@@ -81,6 +82,11 @@ AssessmentResult.init(
       allowNull: false,
       defaultValue: false,
       field: 'is_completed',
+    },
+    timeStarted: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'time_started',
     },
     categoryId: {
       type: DataTypes.INTEGER,

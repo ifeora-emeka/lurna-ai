@@ -359,4 +359,33 @@ export default class AssessmentResultService {
         }
     }
 
+    static async updateTimeStarted(assessmentResultId: number, userId: string) {
+        try {
+            const assessmentResult = await AssessmentResult.findOne({
+                where: {
+                    id: assessmentResultId,
+                    createdBy: userId,
+                    isCompleted: false
+                }
+            });
+
+            if (!assessmentResult) {
+                throw new Error('Assessment result not found or already completed');
+            }
+
+            if (assessmentResult.timeStarted) {
+                return assessmentResult.toJSON();
+            }
+
+            await assessmentResult.update({
+                timeStarted: new Date()
+            });
+
+            return assessmentResult.toJSON();
+        } catch (error) {
+            console.error('[DEBUG] Error in AssessmentResultService.updateTimeStarted:', error);
+            throw error;
+        }
+    }
+
 }

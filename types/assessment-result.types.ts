@@ -17,6 +17,7 @@ export interface AssessmentResultAttributes {
   advice: string;
   difficultyLevel: string;
   isCompleted: boolean;
+  timeStarted?: Date | null;
   categoryId?: number;
   subCategoryId?: number;
   createdAt?: Date;

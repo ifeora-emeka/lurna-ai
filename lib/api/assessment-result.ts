@@ -1,6 +1,18 @@
 import { api } from '@/lib/api';
 
 export const assessmentResultApi = {
+  updateTimeStarted: async (assessmentResultId: number) => {
+    try {
+      const response = await api.put('/api/assessment-results/update-time-started', {
+        assessmentResultId
+      });
+      return response.data;
+    } catch (error) {
+      console.error('[DEBUG] assessmentResultApi.updateTimeStarted error:', error);
+      throw error;
+    }
+  },
+
   submitAssessment: async (assessmentResultId: number, answers: any[]) => {
     try {
       const response = await api.post('/api/assessment-results/submit', {

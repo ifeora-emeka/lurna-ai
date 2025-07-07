@@ -57,7 +57,7 @@ export default function AppLayout({ children, leftNavContent, rightNavContent }:
 
                     {rightNavContent && (
                         <aside className='hidden lg:block w-[320px] backdrop-blur h-screen sticky top-0'>
-                            <div className='z-50 h-16 sticky top-0 flex justify-between items-center px-4'>
+                            {/* <div className='z-50 h-16 sticky top-0 flex justify-between items-center px-4'>
                                 <div className='flex items-center gap-3'>
                                     <Avatar className='h-8 w-8'>
                                         <AvatarImage src="" />
@@ -73,8 +73,8 @@ export default function AppLayout({ children, leftNavContent, rightNavContent }:
                                 <Button size="sm" variant="outline">
                                     Sign Out
                                 </Button>
-                            </div>
-                            <div className='p-4'>
+                            </div> */}
+                            <div>
                                 {rightNavContent}
                             </div>
                         </aside>
