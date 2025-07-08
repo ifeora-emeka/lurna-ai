@@ -9,5 +9,6 @@ export const generateAssessmentRequestSchema = z.object({
         isTimed: z.boolean(),
         areasToTackle: z.array(z.string()),
         totalUnitAssessment: z.number().optional()
-    })
+    }),
+    learningPathId: z.number().min(1)
 }).strict();

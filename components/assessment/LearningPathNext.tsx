@@ -23,11 +23,11 @@ export default function LearningPathNext({ onAssessmentStart }: Props) {
   }, [state.set?.id, fetchNextSteps]);
 
   const handleGenerateAssessment = async () => {
-    if (!state.set?.id || !learningPathState.nextSteps) return;
+    if (!state.set?.id || !learningPathState.nextSteps || !state.learningPath?.id) return;
     
     try {
       if(!state.learningPath?.currentUnitId) return toast.error('Error, please try again');
-      const response = await generateAssessment(state.learningPath?.currentUnitId, learningPathState.nextSteps);
+      const response = await generateAssessment(state.learningPath.currentUnitId, learningPathState.nextSteps, state.learningPath.id);
       onAssessmentStart(response, learningPathState.nextSteps);
     } catch (error) {
       console.error('Failed to generate assessment:', error);

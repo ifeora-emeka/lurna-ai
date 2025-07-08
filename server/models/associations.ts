@@ -73,4 +73,5 @@ export function initializeAssociations() {
   AssessmentResult.belongsTo(User, { foreignKey: 'createdBy', as: 'user' });
   AssessmentResult.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
   AssessmentResult.belongsTo(SubCategory, { foreignKey: 'subCategoryId', as: 'subCategory' });
+  AssessmentResult.belongsTo(LearningPath, { foreignKey: 'learningPathId', as: 'learningPath' });
 }

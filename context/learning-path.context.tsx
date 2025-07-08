@@ -124,7 +124,7 @@ type LearningPathContextType = {
   isCurrentQuestionAnswered: () => boolean;
   getAnsweredQuestionsCount: () => number;
   fetchNextSteps: (setId: number) => Promise<void>;
-  generateAssessment: (unitId: number, nextSteps: any) => Promise<any>;
+  generateAssessment: (unitId: number, nextSteps: any, learningPathId: number) => Promise<any>;
 };
 
 const LearningPathContext = createContext<LearningPathContextType | undefined>(undefined);
@@ -204,11 +204,11 @@ export const LearningPathProvider: React.FC<{ children: ReactNode }> = ({ childr
     }
   }, []);
 
-  const generateAssessment = useCallback(async (unitId: number, nextSteps: any) => {
+  const generateAssessment = useCallback(async (unitId: number, nextSteps: any, learningPathId: number) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const { assessmentApi } = await import('@/lib/api/assessment');
-      const response = await assessmentApi.generateAssessment(unitId, nextSteps);
+      const response = await assessmentApi.generateAssessment(unitId, nextSteps, learningPathId);
       return response.data;
     } catch (error) {
       console.error('Failed to generate assessment:', error);

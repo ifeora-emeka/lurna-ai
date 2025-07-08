@@ -7,9 +7,6 @@ export const moduleGenerationPrompt = (setName: string, setDescription: string, 
     keywords = ['learning', 'education', 'knowledge'];
   }
 
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const moduleCount = isDevelopment ? '5' : '15-20';
-
   return `Create learning modules for the set: "${setName}"
 
 Set Description: ${setDescription}
@@ -17,7 +14,7 @@ Keywords: ${keywords.join(', ')}
 
 IMPORTANT: Your response must be VALID JSON ARRAY ONLY - no explanations, markdown, or other text.
 
-Generate an array of ${moduleCount} learning modules. Each module should be a JSON object with these fields:
+Generate an array of learning modules. Each module should be a JSON object with these fields:
 - name: Clear, descriptive module title (20-80 chars)
 - description: What learners will achieve in this module (50-200 chars)
 - tags: 2-10 relevant tags for the module content (array of strings, use lowercase with hyphens)
@@ -29,6 +26,7 @@ The modules should:
 - Be logically ordered for effective learning
 - Have unique and specific names
 - Include practical, hands-on elements where possible
+- The LAST module in the array MUST be a comprehensive "Final Assessment" module that covers all previous modules. The name must be "Final Assessment" and it should be the last module in the array.
 
 The response must be valid JSON ARRAY that can be parsed with JSON.parse() and MUST start with [ and end with ]. It should match this structure:
 [

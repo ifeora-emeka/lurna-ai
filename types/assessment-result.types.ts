@@ -22,6 +22,7 @@ export interface AssessmentResultAttributes {
   subCategoryId?: number;
   createdAt?: Date;
   updatedAt?: Date;
+  learningPathId: number;
 }
 
 export interface AssessmentResultCreationAttributes {
@@ -44,6 +45,7 @@ export interface AssessmentResultCreationAttributes {
   isCompleted?: boolean;
   categoryId?: number;
   subCategoryId?: number;
+  learningPathId: number;
 }
 
 export interface CreateAssessmentResultRequest {
@@ -63,6 +65,7 @@ export interface CreateAssessmentResultRequest {
   advice?: string;
   difficultyLevel: string;
   isCompleted?: boolean;
+  learningPathId: number;
 }
 
 export interface CreateAssessmentResultResponse {

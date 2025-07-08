@@ -7,7 +7,7 @@ import { generateAssessmentPrompt } from '../learning-path/learning-path.prompts
 
 export default class AssessmentsService {
 
-     static async generateAssessment({ unitId, userId, nextSteps }: { unitId: number, userId: string, nextSteps: LLMNextSteps }) {
+     static async generateAssessment({ unitId, userId, nextSteps, learningPathId }: { unitId: number, userId: string, nextSteps: LLMNextSteps, learningPathId: number }) {
     try {
       const unit = await Unit.findByPk(unitId);
       if (!unit) {
@@ -119,7 +119,8 @@ export default class AssessmentsService {
         difficultyLevel: validatedData.assessment.difficultyLevel,
         isCompleted: false,
         categoryId: set.categoryId,
-        subCategoryId: set.subCategoryId
+        subCategoryId: set.subCategoryId,
+        learningPathId
       });
 
       return {

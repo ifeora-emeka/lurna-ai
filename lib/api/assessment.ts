@@ -1,11 +1,12 @@
 import { api } from '@/lib/api';
 
 export const assessmentApi = {
-    generateAssessment: async (unitId: number, nextSteps: any) => {
+    generateAssessment: async (unitId: number, nextSteps: any, learningPathId: number) => {
         try {
             const response = await api.post('/api/assessments/generate-assessment', {
                 unitId,
-                nextSteps
+                nextSteps,
+                learningPathId
             });
 
             const data = response.data;

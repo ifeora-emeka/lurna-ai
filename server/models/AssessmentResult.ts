@@ -24,6 +24,7 @@ export class AssessmentResult extends Model<AssessmentResultAttributes, Assessme
   declare timeStarted?: Date | null;
   declare categoryId: number;
   declare subCategoryId: number;
+  declare learningPathId: number;
 
   declare readonly createdAt: Date;
   declare readonly updatedAt: Date;
@@ -97,6 +98,11 @@ AssessmentResult.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       field: 'sub_category_id',
+    },
+    learningPathId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'learning_path_id',
     },
   },
   {
