@@ -11,6 +11,8 @@ import { assessmentRouter } from './server/modules/assessments/assessments.route
 import { sequelize } from './server/config/database';
 import { initializeAssociations } from './server/models';
 import dotenv from 'dotenv';
+import path from 'path';
+
 
 dotenv.config();
 
@@ -38,9 +40,16 @@ app.use('/api/learning-path', learningPathRouter);
 app.use('/api/assessment-results', assessmentResultRouter);
 app.use('/api/assessments', assessmentRouter);
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Server is running' });
-});
+const isDev = process.env.NODE_ENV !== 'production';
+
+if (!isDev) {
+  console.log('Production mode: serving Next.js build');
+  
+  app.use(express.static(path.join(__dirname, '..', 'public')));
+  
+  app.use('/_next/static', express.static(path.join(__dirname, '..', '.next/static')));
+  app.use('/_next', express.static(path.join(__dirname, '..', '.next')));
+}
 
 const initDB = async () => {
   try {
@@ -49,7 +58,6 @@ const initDB = async () => {
     await sequelize.authenticate();
     console.log('Database connection has been established successfully.');
     
-    // We no longer use sync() - all schema changes should go through migrations
     console.log('Database connection initialized - migrations should be run separately');
   } catch (error) {
     console.error('Failed to connect to database:', error);
@@ -58,10 +66,38 @@ const initDB = async () => {
 
 const startServer = async () => {
   await initDB();
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`API available at: http://localhost:${PORT}/api`);
-  });
+  
+  if (isDev) {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`API available at: http://localhost:${PORT}/api`);
+      console.log('Start Next.js with: npm run dev (in another terminal)');
+    });
+  } else {
+    const next = require('next');
+    const nextApp = next({ 
+      dev: false, 
+      dir: path.resolve(__dirname, '..'),
+      conf: {
+        distDir: '.next'
+      }
+    });
+    
+    const handle = nextApp.getRequestHandler();
+    
+    await nextApp.prepare();
+    console.log('Next.js app prepared successfully');
+    
+    app.get(/^\/(?!api\/).*/, (req, res) => {
+      return handle(req, res);
+    });
+    
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log(`API available at: http://localhost:${PORT}/api`);
+      console.log(`Frontend available at: http://localhost:${PORT}`);
+    });
+  }
 };
 
 startServer();

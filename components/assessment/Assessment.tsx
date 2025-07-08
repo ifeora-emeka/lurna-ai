@@ -12,6 +12,7 @@ import AssessmentTimer from './AssessmentTimer'
 import AssessmentLoading from './AssessmentLoading'
 import AssessmentEnded from './AssessmentEnded'
 import SectionPlaceholder from '@/components/placeholders/SectionPlaceholder'
+import { useRouter } from 'next/router'
 
 type Props = {
   assessmentData: any;
@@ -20,6 +21,7 @@ type Props = {
 }
 
 export default function Assessment({ assessmentData, nextSteps, onComplete }: Props) {
+  const router = useRouter();
   const { state, dispatch, handleAnswerChange, handleNext, handlePrevious, isCurrentQuestionAnswered, getAnsweredQuestionsCount } = useLearningPath();
   const [isInitializing, setIsInitializing] = useState(true);
   const [initializationError, setInitializationError] = useState<string | null>(null);
@@ -58,6 +60,10 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
   useEffect(() => {
     initializeAssessment();
   }, [assessmentResult?.id, assessmentResult?.timeStarted]);
+
+  useEffect(() => {
+    router.reload();
+  },[])
 
   const handleTimeUp = async () => {
     toast.warning('Time is up! Your assessment will be submitted automatically.');

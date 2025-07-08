@@ -34,7 +34,7 @@ export default function HeaderNav() {
                             <span className="text-sm font-bold text-primary-foreground">L</span>
                         </div>
                         <span className="text-xl font-bold font-poppins">Lurna AI</span>
-                        <Badge variant="secondary" className="ml-2 text-xs">
+                        <Badge variant="outline" className="ml-2 text-xs bg-secondary/10 text-secondary">
                             Beta
                         </Badge>
                     </Link>
@@ -98,9 +98,11 @@ export default function HeaderNav() {
                     <Button variant="ghost" size="sm" className="hidden md:inline-flex">
                         Sign In
                     </Button>
-                    <Button size="sm" className="bg-primary hover:bg-primary/90">
-                        Upload Your PDF
-                    </Button>
+                    <Link href="/login">
+                        <Button size="sm" className="bg-primary hover:bg-primary/90">
+                            Upload Your PDF
+                        </Button>
+                    </Link>
                     
                     <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                         <SheetTrigger asChild>
@@ -136,9 +138,11 @@ export default function HeaderNav() {
                                     <Button variant="outline" className="w-full">
                                         Sign In
                                     </Button>
-                                    <Button className="w-full bg-primary hover:bg-primary/90">
-                                        Upload Your PDF
-                                    </Button>
+                                    <Link href="/login">
+                                        <Button className="w-full bg-primary hover:bg-primary/90">
+                                            Upload Your PDF
+                                        </Button>
+                                    </Link>
                                 </div>
                             </nav>
                         </SheetContent>

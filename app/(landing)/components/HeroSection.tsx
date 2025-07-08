@@ -36,10 +36,12 @@ export default function HeroSection() {
                         </p>
                         
                         <div className="flex flex-col items-center gap-4 pt-4">
-                            <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-lg font-semibold">
-                                Upload Your PDF
-                                <span className="ml-2">→</span>
-                            </Button>
+                            <Link href="/login">
+                                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-lg font-semibold">
+                                    Upload Your PDF
+                                    <span className="ml-2">→</span>
+                                </Button>
+                            </Link>
                             <p className="text-sm text-muted-foreground">Start for free, no credit card required</p>
                         </div>
                     </div>

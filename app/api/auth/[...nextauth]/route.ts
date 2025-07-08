@@ -2,6 +2,8 @@ import NextAuth from "next-auth";
 import { ExtendedUser, UserSession } from "@/types/auth.types";
 import { authOptions } from "@/lib/auth-options";
 
+export const dynamic = 'force-dynamic';
+
 export type { ExtendedUser, UserSession };
 
 const handler = NextAuth(authOptions);
