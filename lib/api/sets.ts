@@ -20,7 +20,6 @@ export const setsApi = {
   getSetBySlug: async (slug: string) => {
     try {
       const response = await api.get(`/api/sets/${slug}`);
-      console.log('SET DETAILS RES::::::', response.data)
       return response.data;
     } catch (error) {
       console.error('[DEBUG] setsApi.getSetBySlug error:', error);

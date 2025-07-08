@@ -1,0 +1,12 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="48" height="48" rx="12" fill="url(#upload-gradient)" />
+  <path d="M24 12L32 20H28V28H20V20H16L24 12Z" fill="white" />
+  <rect x="16" y="30" width="16" height="2" rx="1" fill="white" />
+  <rect x="16" y="34" width="12" height="2" rx="1" fill="white" />
+  <defs>
+    <linearGradient id="upload-gradient" x1="0" y1="0" x2="48" y2="48">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1E40AF" />
+    </linearGradient>
+  </defs>
+</svg>

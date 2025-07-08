@@ -1,0 +1,19 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="48" height="48" rx="12" fill="url(#multi-format-gradient)" />
+  <rect x="8" y="12" width="16" height="20" rx="2" fill="white" />
+  <rect x="12" y="16" width="8" height="2" rx="1" fill="url(#multi-format-gradient)" />
+  <rect x="12" y="20" width="6" height="2" rx="1" fill="url(#multi-format-gradient)" />
+  <rect x="12" y="24" width="8" height="2" rx="1" fill="url(#multi-format-gradient)" />
+  <rect x="28" y="12" width="12" height="12" rx="2" fill="white" />
+  <circle cx="34" cy="18" r="2" fill="url(#multi-format-gradient)" />
+  <path d="M30 22L34 26L38 22" stroke="url(#multi-format-gradient)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+  <rect x="28" y="28" width="12" height="8" rx="2" fill="white" />
+  <rect x="30" y="30" width="8" height="2" rx="1" fill="url(#multi-format-gradient)" />
+  <rect x="30" y="33" width="6" height="1" rx="0.5" fill="url(#multi-format-gradient)" />
+  <defs>
+    <linearGradient id="multi-format-gradient" x1="0" y1="0" x2="48" y2="48">
+      <stop offset="0%" stop-color="#EC4899" />
+      <stop offset="100%" stop-color="#BE185D" />
+    </linearGradient>
+  </defs>
+</svg>

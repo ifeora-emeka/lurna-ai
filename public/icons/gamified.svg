@@ -1,0 +1,13 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="48" height="48" rx="12" fill="url(#gamified-gradient)" />
+  <polygon points="24,8 28,20 40,20 30,28 34,40 24,32 14,40 18,28 8,20 20,20" fill="white" />
+  <circle cx="24" cy="24" r="4" fill="url(#gamified-gradient)" />
+  <circle cx="38" cy="10" r="4" fill="white" />
+  <text x="38" y="14" text-anchor="middle" fill="url(#gamified-gradient)" font-size="8" font-weight="bold">1</text>
+  <defs>
+    <linearGradient id="gamified-gradient" x1="0" y1="0" x2="48" y2="48">
+      <stop offset="0%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#6D28D9" />
+    </linearGradient>
+  </defs>
+</svg>

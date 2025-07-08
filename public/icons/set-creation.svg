@@ -1,0 +1,15 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" rx="8" fill="url(#set-creation-gradient)" />
+  <rect x="6" y="8" width="12" height="8" rx="2" fill="white" />
+  <rect x="6" y="18" width="12" height="8" rx="2" fill="white" />
+  <rect x="20" y="8" width="6" height="18" rx="2" fill="white" />
+  <rect x="8" y="10" width="8" height="2" rx="1" fill="url(#set-creation-gradient)" />
+  <rect x="8" y="20" width="6" height="2" rx="1" fill="url(#set-creation-gradient)" />
+  <rect x="22" y="14" width="2" height="2" rx="1" fill="url(#set-creation-gradient)" />
+  <defs>
+    <linearGradient id="set-creation-gradient" x1="0" y1="0" x2="32" y2="32">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+  </defs>
+</svg>
