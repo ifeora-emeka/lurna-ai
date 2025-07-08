@@ -17,7 +17,7 @@ export default function DefaultNav() {
           />
           <EachNavLink
             label='Wallet'
-            href='/wallet'
+            href='/space/wallet'
             icon={<Wallet className='h-4 w-4' />}
           />
         </div>

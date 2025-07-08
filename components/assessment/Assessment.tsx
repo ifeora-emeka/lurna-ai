@@ -67,10 +67,6 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
     await handleSubmit(true);
   };
 
-  console.log('ASSESSMENT DATA:', assessmentData);    
-  console.log('ASSESSMENT RESULT:', assessmentResult);
-  console.log('QUESTIONS DATA:', questions.length > 0 ? questions[0] : 'No questions');
-
   if (isInitializing) {
     return <AssessmentLoading />;
   }
@@ -190,18 +186,15 @@ export default function Assessment({ assessmentData, nextSteps, onComplete }: Pr
     }
     
     else if (question.type === 'multiple_select') {
-      console.log('RENDERING MULTIPLE SELECT OPTIONS:', question.options);
       return (
         <div className="space-y-4">
           {question.options && question.options.length > 0 ? (
             <div className="space-y-3">
               {question.options.map((option: any) => {
-                console.log('RENDERING MULTIPLE SELECT OPTION:', option);
                 const optionContent = option.content || option.text || '';
                 const isSelected = Array.isArray(questionAnswer) && questionAnswer.includes(option.id);
                 
                 if (!optionContent.trim()) {
-                  console.warn('Empty option content detected:', option);
                   return null;
                 }
                 

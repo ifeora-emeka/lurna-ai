@@ -2,9 +2,6 @@
 import React from 'react'
 import DefaultNav from './DefaultNav'
 import { useLayout } from '@/context/layout.context'
-import { X, User } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import Image from 'next/image'
 import Link from 'next/link'
 
