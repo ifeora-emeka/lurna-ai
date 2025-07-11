@@ -39,10 +39,10 @@ RUN mkdir -p /data && chown -R nextjs:nodejs /data
 
 USER nextjs
 
-EXPOSE 3001
+EXPOSE 8080
 
 ENV NODE_ENV=production
-ENV PORT=3001
+ENV PORT=8080
 ENV NEXT_TELEMETRY_DISABLED=1
 
 CMD ["./start.sh"]
