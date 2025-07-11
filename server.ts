@@ -111,10 +111,11 @@ const startServer = async () => {
       return handle(req, res);
     });
     
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Server running on port ${PORT}`);
-      console.log(`API available at: http://localhost:${PORT}/api`);
-      console.log(`Frontend available at: http://localhost:${PORT}`);
+    const prodPort = Number(process.env.PORT) || 8080;
+    app.listen(prodPort, '0.0.0.0', () => {
+      console.log(`Server running on port ${prodPort}`);
+      console.log(`API available at: http://localhost:${prodPort}/api`);
+      console.log(`Frontend available at: http://localhost:${prodPort}`);
     });
   }
 };
