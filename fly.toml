@@ -40,6 +40,11 @@ primary_region = "dfw"
   destination = "/data"
   initial_size = "1gb"
 
+[[mounts]]
+  source = "lurna_db"
+  destination = "/data/db"
+  initial_size = "1gb"
+
 [[statics]]
   guest_path = "/app/public"
   url_prefix = "/static/"
