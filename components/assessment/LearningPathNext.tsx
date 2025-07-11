@@ -38,7 +38,7 @@ export default function LearningPathNext({ onAssessmentStart }: Props) {
     
     return (
       <div className="py-8 flex justify-center">
-        <center className='md:w-[500px] w-full mx-auto'>
+        <center className='md:w-[600px] w-full mx-auto'>
           <AssistantMessage
             flow='vertical'
             markdownText="You have a pending assessment. Complete it to continue your learning journey."
@@ -65,7 +65,7 @@ export default function LearningPathNext({ onAssessmentStart }: Props) {
 
   return (
     <div className="py-8 flex justify-center">
-      <center className='md:w-[500px] w-full mx-auto text-start'>
+      <center className='md:w-[600px]- w-full mx-auto text-start'>
         <AssistantMessage
           flow='horizontal'
           markdownText={learningPathState.nextSteps.messageForStudent}

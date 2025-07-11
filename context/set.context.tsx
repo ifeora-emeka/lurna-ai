@@ -31,7 +31,7 @@ export function SetProvider({ children, initialData }: { children: React.ReactNo
     learningPath: initialData?.learningPath || null
   })
 
-  console.log('SET STATE:::', state)
+  // console.log('SET STATE:::', state)
 
   return (
     <SetContext.Provider value={{ state, setState }}>

@@ -111,11 +111,15 @@ You MUST follow this exact progression logic based on the MOST RECENT assessment
    - Message: Encourage and explain staying at hard level
 
 **MESSAGE REQUIREMENTS:**
-- Acknowledge their specific score percentage
-- Explain what happens next based on their performance
-- Be encouraging regardless of performance
-- Mention the difficulty level they'll face next
-- Keep it concise but motivational
+- Write a personalized, motivational message for the student.
+- Do NOT use generic phrases like "Congratulations on scoring X%" or "You'll now move on to medium difficulty assessments".
+- Instead, reference the specific topics or skills the student demonstrated understanding of in previous assessments.
+- Use language that guides and encourages the student, such as "You showed great understanding of [topics], now let's take things a bit further."
+- Clearly state what the next assessment will focus on, e.g., "For this next assessment, we're going to focus on [areas to tackle]."
+- Use phrases like "Let's take things a step further" or "Now let's build on what you've learned" instead of referencing difficulty levels directly.
+- The message should help the student understand their progress and what to expect next, in a supportive tone.
+- Mention the next focus areas or skills, not just the difficulty level.
+- Keep it concise, positive, and actionable.
 
 **AREAS TO TACKLE:**
 - Only include areas where the student got questions wrong
@@ -130,7 +134,7 @@ You MUST follow this exact progression logic based on the MOST RECENT assessment
 Before responding, verify:
 1. You have correctly identified the most recent assessment score and difficulty
 2. You are following the exact progression logic based on pass/fail and difficulty
-3. Your message mentions their specific score percentage
+3. Your message is personalized, references specific topics, and guides the student on what comes next
 4. Your difficulty level follows the progression rules
 5. canMoveForward is only true if they passed a hard assessment
 
@@ -138,7 +142,7 @@ IMPORTANT: Your response must be VALID JSON ONLY - no explanations, markdown, or
 
 Generate a JSON object with these exact fields:
 {
-  "messageForStudent": "Your personalized message acknowledging their [SCORE]% performance and explaining the next difficulty level",
+  "messageForStudent": "Your personalized message acknowledging their progress, referencing specific topics, and explaining what the next assessment will focus on",
   "difficultyLevel": "easy" | "medium" | "hard",
   "canMoveForward": true | false,
   "isTimed": true | false,

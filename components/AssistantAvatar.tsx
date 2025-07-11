@@ -10,7 +10,7 @@ type Props = {
 export default function AssistantAvatar({ size, className }: Props) {
     return (
         <Image
-            src="/assistant/1.jpg"
+            src="/assistant/4.jpg"
             alt="Lurna AI"
             width={size || 60}
             height={size || 60}

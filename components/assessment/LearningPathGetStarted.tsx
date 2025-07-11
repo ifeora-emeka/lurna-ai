@@ -46,16 +46,16 @@ export default function LearningPathGetStarted({ onStart }: Props) {
 
   return (
     <div className="py-8 flex justify-center">
-      <center className='md:w-[500px] w-full mx-auto'>
+      <center className='md:w-[600px] w-full mx-auto text-start'>
         <AssistantMessage
-          flow='vertical'
+          flow='horizontal'
           markdownText={
             `Welcome to the **${state.set?.name}** learning path
             \n\nThis is your personalized journey to mastering the subject. Click the button below to begin your learning journey.
             `
           }
         >
-          <center>
+          <div className='flex justify-start'>
             <Button 
               className="mt-4 self-start" 
               variant="secondary" 
@@ -64,7 +64,7 @@ export default function LearningPathGetStarted({ onStart }: Props) {
             >
               {isLoading ? 'Starting Learning Path...' : 'Start Learning Path'}
             </Button>
-          </center>
+          </div>
         </AssistantMessage>
       </center>
     </div>
