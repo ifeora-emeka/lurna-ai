@@ -18,7 +18,11 @@
     "db:status": "npx sequelize-cli db:migrate:status",
     "db:migrate:production": "cross-env NODE_ENV=production node migrate-production.js migrate",
     "db:status:production": "cross-env NODE_ENV=production node migrate-production.js status",
-    "db:rollback:production": "cross-env NODE_ENV=production node migrate-production.js rollback"
+    "db:rollback:production": "cross-env NODE_ENV=production node migrate-production.js rollback",
+    "deploy": "node deploy.js",
+    "fly:launch": "fly launch",
+    "fly:status": "fly status",
+    "fly:logs": "fly logs"
   },
   "dependencies": {
     "@auth/core": "^0.40.0",
@@ -88,6 +92,7 @@
     "slugify": "^1.6.6",
     "sonner": "^2.0.5",
     "sqlite3": "^5.1.7",
+    "cross-env": "^7.0.3",
     "tailwind-merge": "^3.3.1",
     "tsup": "^8.5.0",
     "vaul": "^1.1.2",
@@ -103,7 +108,6 @@
     "@types/node": "^20.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "cross-env": "^7.0.3",
     "nodemon": "^3.1.10",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",

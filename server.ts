@@ -17,7 +17,7 @@ import path from 'path';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = parseInt(process.env.PORT || '3001');
 
 app.use(cors());
 app.use(express.json());
@@ -39,6 +39,25 @@ app.use('/api/units', unitsRouter);
 app.use('/api/learning-path', learningPathRouter);
 app.use('/api/assessment-results', assessmentResultRouter);
 app.use('/api/assessments', assessmentRouter);
+
+app.get('/api/health', async (req, res) => {
+  try {
+    await sequelize.authenticate();
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      database: 'connected'
+    });
+  } catch (error) {
+    console.error('Health check failed:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -92,7 +111,7 @@ const startServer = async () => {
       return handle(req, res);
     });
     
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`API available at: http://localhost:${PORT}/api`);
       console.log(`Frontend available at: http://localhost:${PORT}`);

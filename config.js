@@ -32,10 +32,10 @@ const getDbConfig = () => {
     }
   }
   
-  // Default to SQLite for development and testing
+  
   return {
     dialect: 'sqlite',
-    storage: path.join(__dirname, 'database', 
+    storage: path.join(process.env.FLY_APP_NAME ? '/data' : __dirname, 'database', 
       process.env.NODE_ENV === 'test' ? 'test_lurna.sqlite' : 'lurna.sqlite'),
     logging: false
   };

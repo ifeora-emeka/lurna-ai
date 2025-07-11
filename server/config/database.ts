@@ -35,7 +35,7 @@ const getDbConfig = (): Options => {
   }
   
   // Default to SQLite for development and testing
-  const dbDir = path.join(process.cwd(), 'database');
+  const dbDir = path.join(process.env.FLY_APP_NAME ? '/data' : process.cwd(), 'database');
   const dbPath = path.join(dbDir, 
     process.env.NODE_ENV === 'test' ? 'test_lurna.sqlite' : 'lurna.sqlite');
 
